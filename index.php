@@ -1,4 +1,1 @@
-<h1>Dev started...</h1>
-
-<?php
-
+<?php require_once dirname(__FILE__) . '/engine/core/main.php'; 
