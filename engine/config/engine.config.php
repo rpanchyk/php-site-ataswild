@@ -30,7 +30,7 @@ $engineConfig['database']['cache_ttl_default'] = '0'; // seconds
 
 $engineConfig['web_data']['super_globals'] = array('_GET', '_POST', '_REQUEST', '_FILES', '_ENV', '_SERVER', '_COOKIE', '_SESSION');
 
-$engineConfig['mvc_data']['langs'] = array('ru', 'en');
+$engineConfig['mvc_data']['langs'] = array('ua', 'ru', 'en');
 $engineConfig['mvc_data']['lang_default'] = 'ru';
 $engineConfig['mvc_data']['formatters'] = array('array', 'html', 'xml', 'rss');
 $engineConfig['mvc_data']['formatter_default'] = 'html';
@@ -38,9 +38,12 @@ $engineConfig['mvc_data']['allowed_webaccess_apps'] = array('auth', 'comments', 
 $engineConfig['mvc_data']['app_alias_default'] = 'home';
 $engineConfig['mvc_data']['app_operation_default'] = 'get';
 
+$engineConfig['cookie']['name_lang'] = 'ftlng';
+
 $engineConfig['out_data']['template'] = 'Default';
 $engineConfig['out_data']['web_path'] = '/public/template/' . $engineConfig['out_data']['template'];
 
+$engineConfig['smtp']['is_use_internal_server'] = FALSE;
 $engineConfig['smtp']['server_host'] = 'smtp.freenet.com.ua';
 $engineConfig['smtp']['server_port'] = '25';
 $engineConfig['smtp']['server_user'] = '';
