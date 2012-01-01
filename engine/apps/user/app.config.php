@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 
 $config = array();
 
@@ -28,8 +29,8 @@ $config['cookie'] = array(
 $config['editor']['list']['fields'] = array(
 	'email' => array('name_ru' => 'E-mail', 'style' => 'width:30%;'),
 	'name' => array('name_ru' => 'Имя', 'style' => 'width:50%;'),
-//	'group_id' => array('name_ru' => 'Группа', 'style' => 'width:10%;'),
-//	'status' => array('name_ru' => 'Статус', 'style' => 'width:10%;')
+	//	'group_id' => array('name_ru' => 'Группа', 'style' => 'width:10%;'),
+	//	'status' => array('name_ru' => 'Статус', 'style' => 'width:10%;')
 );
 
 $config['editor']['default']['fields'] = array(

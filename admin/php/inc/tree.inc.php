@@ -7,7 +7,7 @@ function getTree($httpHandlerPath)
 	$strTree = '';
 
 	// Get tree data
-	$controller = MvcFactory::create('container', 'controller');
+	$controller = MvcFactory::create('container', ParamsMvc::ENTITY_CONTROLLER);
 	$req = new ActionRequest($request);
 	$req->params[Params::OPERATION_NAME] = 'get_tree';
 	$req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
@@ -18,7 +18,7 @@ function getTree($httpHandlerPath)
 
 	// Add buttons
 	$strTree .= '<div style="text-align:left;">';
-	$strTree .= '<div ' . $strButtonStyle . '><a onclick="doajaxContent(\'app=container&_id=-1\', \'is_skip\')" alt="Add container" title="Add container"><img src="/admin/images/tree_add_folder.png" border="0" /></a></div>';
+	$strTree .= '<div ' . $strButtonStyle . '><a onclick="doajaxContent(\'app=container&alias=\', \'is_skip\')" alt="Add container" title="Add container"><img src="/admin/images/tree_add_folder.png" border="0" /></a></div>';
 	//$strTree .= '<div style="display:inline; padding-left:5%;"></div>';
 	//$strTree .= '<div ' . $strButtonStyle . '><a onclick="doajaxContent(\'app=new&_id=-1\', \'is_skip\')" alt="Add element" title="Add element"><img src="/admin/images/tree_add_file.png" border="0" /></a></div>';
 	$strTree .= '<div style="display:inline; padding-left:5%;"></div>';
@@ -52,6 +52,8 @@ function getTreeBranch($data, $httpHandlerPath)
 {
 	try
 	{
+		global $engineConfig, $request;
+		
 		$strTree = '';
 //echo '<pre>'; print_r($data); echo '</pre>';
 		foreach ($data as $row)
@@ -73,7 +75,10 @@ function getTreeBranch($data, $httpHandlerPath)
 			if (isset($row['_parent_id']))
 			$strTree .= '&_parent_id=' . $row['_parent_id'];
 			else 
-			$strTree .= '&_id=' . $row['_id'];
+			$strTree .= '&alias=' . $row['alias'];
+			
+			//if (!$bHasChilds)
+			//	$strTree .= '&lang=' . (!(@empty($request->dataWeb->cookie[$engineConfig['cookie']['name_lang']])) ? $request->dataWeb->cookie[$engineConfig['cookie']['name_lang']] : $engineConfig['mvc_data']['lang_default']);
 			
 			$strTree .= '\', this)">' . $row['name'];
 			$strTree .= '</a>';

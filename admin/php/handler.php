@@ -14,28 +14,26 @@ try
 
 	// Include all files need
 	require_once dirname(__FILE__) . '/../../engine/core/include.php';
-	require_once dirname(__FILE__) . '/inc/form.inc.php';
-	//require_once ADMIN_PATH . '/php/inc/auth.inc.php';
+	require_once ADMIN_PATH . '/php/inc/form.inc.php';
 	require_once ADMIN_PATH . '/php/inc/tree.inc.php';
 
 	// Create base controller (just for existance)
-	$base = MvcFactory::create('base', 'controller');
+	//$base = MvcFactory::create('base', ParamsMvc::ENTITY_CONTROLLER);
 
 	// Create initial request & response
-	$request = new ActionRequest(NULL);
-	$response = new ActionResponse();
-
-	$handlerPath = '/admin/php/handler.php';
+	//$request = new ActionRequest(NULL);
+	//$response = new ActionResponse();
 
 	// Init vars
-	$request = new ActionRequest(NULL);
+	$handlerPath = '/admin/php/handler.php';
 	$regexPatternRequestParamValue = "/^[-a-zA-Z0-9_]+$/";
-
-	$user = MvcFactory::create('user', 'controller');
+	$strNoAuthMessage = 'Пользователь не авторизован.<br /><a href="/admin/">Войти</a>';
+	
+	// Get authorization data
+	$user = MvcFactory::create('user', ParamsMvc::ENTITY_CONTROLLER);
 	$reqAuth = new ActionRequest($request);
 	$reqAuth->params[Params::OPERATION_NAME] = Params::OPERATION_USER_GET_SESSION;
 	$dataAuth = $user->run($reqAuth, $response);
-	$strNoAuthMessage = 'Пользователь не авторизован.<br /><a href="/admin/">Войти</a>';
 
 	if (isset($request->dataWeb->request['do_login']))
 	{
@@ -83,7 +81,7 @@ try
 
 		// Process content
 		$paramApp = ActionRequest::getRequestParamValue($request, 'app', $regexPatternRequestParamValue);
-		$paramId = ActionRequest::getRequestParamValue($request, '_id', $regexPatternRequestParamValue, TRUE);
+		$paramAlias = ActionRequest::getRequestParamValue($request, 'alias', $regexPatternRequestParamValue, TRUE);
 		$paramParentId = ActionRequest::getRequestParamValue($request, '_parent_id', $regexPatternRequestParamValue, TRUE);
 		$paramDataObject = ActionRequest::getRequestParamValue($request, 'data_object', $regexPatternRequestParamValue, TRUE);
 		$paramDataObjectID = ActionRequest::getRequestParamValue($request, 'data_object_id', $regexPatternRequestParamValue, TRUE);
@@ -93,9 +91,10 @@ try
 
 		// Process data
 		if (isset($request->dataWeb->request['send']))
-			$formResult = processForm($paramApp, $paramId, $paramDataObject);
-
-		$controller = MvcFactory::create($paramApp, 'controller');
+			$formResult = processForm($paramApp, $paramAlias, $paramDataObject);
+//echo '<pre>'; print_r($formResult); echo '</pre>';
+//die($paramAlias);
+		$controller = MvcFactory::create($paramApp, ParamsMvc::ENTITY_CONTROLLER);
 
 		if (FTArrayUtils::checkData($formResult))
 		{
@@ -104,79 +103,143 @@ try
 				$data = array();
 				foreach ($request->dataWeb->request as $k => $v)
 					$data[$k] = urldecode($v);
+					
+				// Hide -1
+				if (@$data['alias'] == '-1')
+					$data['alias'] = '';
 			}
 			elseif (FTArrayUtils::checkData(@$formResult['data']))
 				$data = $formResult['data'];
 		}
-		elseif (!@empty($paramId))
+		elseif (!empty($paramAlias))
 		{
-			if ($paramId != - 1)
-			{
+//			if ($paramAlias != - 1)
+//			{
 				// Get data
 				$req = new ActionRequest($request);
-				$req->params[Params::OPERATION_NAME] = 'get_by_id';
-				$req->params[Params::ID] = $paramId;
+				$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
+				$req->params[Params::ALIAS] = $paramAlias;
 				$req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
 			
 				$req->params[ParamsConfig::DATA_OBJECT] = $paramApp;
 				//$req->params[ParamsConfig::EDITOR_ID] = ParamsConfig::EDITOR_DEFAULT;
 				
-			$dataController = $controller->run($req, $response);
-				FTException::throwOnTrue(!FTArrayUtils::checkData($dataController), 'No data for ' . $paramApp);
+				if ($paramApp != 'container')
+				{
+					// Add lang restriction
+					$lang = !(@empty($request->dataWeb->cookie[$engineConfig['cookie']['name_lang']])) ? $request->dataWeb->cookie[$engineConfig['cookie']['name_lang']] : $engineConfig['mvc_data']['lang_default'];
+					$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+					$req->params[ParamsSql::RESTRICTION_DATA][':lang'] = $lang;
+				}
+				
+				$dataController = $controller->run($req, $response);
+				//FTException::throwOnTrue(!FTArrayUtils::checkData($dataController), 'No data for ' . $paramApp);
 
-				$data = $dataController[0];
-			}
-			else
-			{
-				// Add new record
-
-				// Get app config
-				$reqGetConfig = new ActionRequest($request);
-				$reqGetConfig->params[Params::OPERATION_NAME] = 'get_config';
-				$reqGetConfig->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
-				$reqGetConfig->params[ParamsMvc::APP_NAME] = $paramApp;
-				$resGetConfig = $controller->run($reqGetConfig, $response);
-
-				$data = array();
-
-				// Fill values
-				if (FTArrayUtils::checkData(@$resGetConfig['editor']['default']['fields']))
-					foreach ($resGetConfig['editor']['default']['fields'] as $confKey => $confValue)
-						if (isset($confValue['default_value']))
-							$data[$confKey] = $confValue['default_value'];
-						else
-							$data[$confKey] = '';
-				$data['name'] = '';
-			}
+				if (!FTArrayUtils::checkData($dataController))
+				{
+					// Fill values
+					$data = array();
+					if (FTArrayUtils::checkData(@$resGetConfig['editor']['default']['fields']))
+						foreach ($resGetConfig['editor']['default']['fields'] as $confKey => $confValue)
+							if (isset($confValue['default_value']))
+								$data[$confKey] = $confValue['default_value'];
+							else
+								$data[$confKey] = '';
+					$data['name'] = '';
+					
+					// Get other data
+					$req = new ActionRequest($request);
+					$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
+					$req->params[Params::ALIAS] = $paramAlias;
+					$req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
+				
+					$req->params[ParamsConfig::DATA_OBJECT] = $paramApp;
+	
+					// Add lang restriction
+					$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+					$req->params[ParamsSql::RESTRICTION_DATA][':lang'] = $engineConfig['mvc_data']['lang_default'];
+					
+					$dataController = $controller->run($req, $response);
+					FTException::throwOnTrue(!FTArrayUtils::checkData($dataController), 'No data for ' . $paramApp);
+					
+					$data['alias'] = @$dataController[0]['alias'];
+					$data['template'] = @$dataController[0]['template'];
+				}
+				else 
+					$data = $dataController[0];
+//			}
+//			else
+//			{
+//				// Add new record
+//
+//				// Get app config
+//				$reqGetConfig = new ActionRequest($request);
+//				$reqGetConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
+//				$reqGetConfig->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
+//				$reqGetConfig->params[ParamsMvc::APP_NAME] = $paramApp;
+//				$resGetConfig = $controller->run($reqGetConfig, $response);
+//
+//				// Fill values
+//				$data = array();
+//				if (FTArrayUtils::checkData(@$resGetConfig['editor']['default']['fields']))
+//					foreach ($resGetConfig['editor']['default']['fields'] as $confKey => $confValue)
+//						if (isset($confValue['default_value']))
+//							$data[$confKey] = $confValue['default_value'];
+//						else
+//							$data[$confKey] = '';
+//				$data['name'] = '';
+//			}
 		}
-		elseif (!@empty($paramParentId))
+//		elseif (!@empty($paramParentId))
+//		{
+//			$controller = MvcFactory::create($paramApp, ParamsMvc::ENTITY_CONTROLLER);
+//			$reqGetList = new ActionRequest($request);
+//			$reqGetList->params[Params::OPERATION_NAME] = Params::OPERATION_GET;
+//			$reqGetList->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
+//			$reqGetList->params[ParamsSql::RESTRICTION] = '_parent_id='.$paramParentId . ' AND is_active=1';
+//			$reqGetList->params[ParamsConfig::DATA_OBJECT] = $paramApp;
+//			$data = $controller->run($reqGetList, $response);
+//			
+//			$data = FTArrayUtils::checkData($data) ? $data : 'Нет данных';
+//		}
+		else
 		{
-			$controller = MvcFactory::create($paramApp, 'controller');
-			$reqGetList = new ActionRequest($request);
-			$reqGetList->params[Params::OPERATION_NAME] = Params::OPERATION_GET;
-			$reqGetList->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
-			$reqGetList->params[ParamsSql::RESTRICTION] = '_parent_id='.$paramParentId . ' AND is_active=1';
-			$reqGetList->params[ParamsConfig::DATA_OBJECT] = $paramApp;
-			$data = $controller->run($reqGetList, $response);
-			
-			$data = FTArrayUtils::checkData($data) ? $data : 'Нет данных';
+			// Add new record
+
+			// Get app config
+			$reqGetConfig = new ActionRequest($request);
+			$reqGetConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
+			$reqGetConfig->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
+			$reqGetConfig->params[ParamsMvc::APP_NAME] = $paramApp;
+			$resGetConfig = $controller->run($reqGetConfig, $response);
+
+			// Fill values
+			$data = array();
+			if (FTArrayUtils::checkData(@$resGetConfig['editor']['default']['fields']))
+				foreach ($resGetConfig['editor']['default']['fields'] as $confKey => $confValue)
+					if (isset($confValue['default_value']))
+						$data[$confKey] = $confValue['default_value'];
+					else
+						$data[$confKey] = '';
+			$data['name'] = '';
 		}
 
 		// Add hidden data
 		$dataHidden = array();
 		$dataHidden['data_object'] = $paramDataObject;
 		$dataHidden['data_object_id'] = $paramDataObjectID;
-		$dataHidden['data_object_parent_id'] = $paramId ? $paramId : NULL;
+		$dataHidden['data_object_parent_id'] = $paramAlias ? $paramAlias : NULL;
 
 		// Add form params
 		$dataFormParams = array();
 		$dataFormParams['form_result'] = isset($formResult['message']) ? $formResult['message'] : '';
 
 		// Show form
-		if (@empty($paramParentId) && !@empty($paramId) && (!$paramDataObject || $paramDataObjectID))
+		//if (@empty($paramParentId) && !@empty($paramAlias) && (!$paramDataObject || $paramDataObjectID))
+		if (isset($paramAlias))
 		{
 			$dataHidden[ParamsConfig::EDITOR_ID] = ParamsConfig::EDITOR_DEFAULT;
-			echo getForm($paramApp, $paramId, $data, $dataHidden, $dataFormParams);
+			echo getForm($paramApp, $paramAlias, $data, $dataHidden, $dataFormParams);
 		}
 		else
 		{
@@ -199,9 +262,9 @@ try
 
 		// Process data
 		//if (isset($request->dataWeb->request['send']))
-		//$formResult = processForm($paramApp, $paramId);
+		//$formResult = processForm($paramApp, $paramAlias);
 
-		$controller = MvcFactory::create($paramApp, 'controller');
+		$controller = MvcFactory::create($paramApp, ParamsMvc::ENTITY_CONTROLLER);
 
 		if (!isset($request->dataWeb->request['_id']))
 		{
@@ -215,12 +278,12 @@ try
 		}
 		else
 		{
-			$paramId = ActionRequest::getRequestParamValue($request, '_id', $regexPatternRequestParamValue);
+			$paramAlias = ActionRequest::getRequestParamValue($request, '_id', $regexPatternRequestParamValue);
 
 			// Get data
 			$reqGetById = new ActionRequest($request);
 			$reqGetById->params[Params::OPERATION_NAME] = 'get_by_id';
-			$reqGetById->params[Params::ID] = $paramId;
+			$reqGetById->params[Params::ID] = $paramAlias;
 			$reqGetById->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
 			$dataGetById = $controller->run($reqGetById, $response);
 
@@ -229,7 +292,7 @@ try
 			$data = $dataGetById[0];
 
 			// Show form
-			echo getForm($paramApp, $paramId, $data, array(), array('form_result' => isset($formResult['message']) ? $formResult['message'] : ''));
+			echo getForm($paramApp, $paramAlias, $data, array(), array('form_result' => isset($formResult['message']) ? $formResult['message'] : ''));
 		}
 	}
 	elseif (isset($request->dataWeb->request['feedback_send']))
@@ -275,7 +338,7 @@ try
 		unset($dataAdd['anti_spam_code']);
 		unset($dataAdd['feedback_send']);
 
-		$ctrlComments = MvcFactory::create('comments', 'controller');
+		$ctrlComments = MvcFactory::create('comments', ParamsMvc::ENTITY_CONTROLLER);
 		$reqAddComments = new ActionRequest($request);
 		$reqAddComments->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
 		$reqAddComments->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
@@ -307,15 +370,30 @@ try
 			$msg .= CRLF . 'Удалить: ' . $link.'&accept=0';
 				
 			// Let's rock!
-			$email_result = custom_mail($email_from, $engineConfig['smtp']['email_address'], $engineConfig['smtp']['email_subject'], $msg, $engineConfig['smtp']['server_host'], $engineConfig['smtp']['server_port'],$engineConfig['smtp']['server_user'],$engineConfig['smtp']['server_pass']);
+			if (!$engineConfig['smtp']['is_use_internal_server'])
+			{
+				require_once EXTERNAL_PATH . '/Net_SMTP/send.php';
+				$email_result = custom_mail($email_from, $engineConfig['smtp']['email_address'], $engineConfig['smtp']['email_subject'], $msg, $engineConfig['smtp']['server_host'], $engineConfig['smtp']['server_port'],$engineConfig['smtp']['server_user'],$engineConfig['smtp']['server_pass']);
+			}
+			else
+			{
+				$eol = "\r\n";
+				$additionalHeaders = 'Subject: ' . $engineConfig['smtp']['email_subject'];
+				$additionalHeaders .= 'From: ' . $email_from;
+				$additionalHeaders .= $eol . 'Reply-To: ' . $email_from;
+				$additionalHeaders .= $eol . 'Content-Type: text/plain; charset=utf-8';
+				$additionalHeaders .= $eol . 'Content-Transfer-Encoding: 8bit';
+				
+				$email_result = mail($engineConfig['smtp']['email_address'], $engineConfig['smtp']['email_subject'], $msg, $additionalHeaders);
+			}
 			
 			if ($email_result)
-			echo SEND_OK . GOTOMAIN;
+				echo SEND_OK . GOTOMAIN;
 			else
-			echo ERROR_SEND_FAILED . GOTOBACK;
+				echo ERROR_SEND_FAILED . GOTOBACK;
 		}
 		else
-		echo $error . GOTOBACK;
+			echo $error . GOTOBACK;
 		?>
 		</p>
 		</body>
@@ -333,7 +411,7 @@ try
 		$paramId = ActionRequest::getRequestParamValue($request, '_id', $regexPatternRequestParamValue);
 		
 		// Update comment
-		$ctrlComments = MvcFactory::create('comments', 'controller');
+		$ctrlComments = MvcFactory::create('comments', ParamsMvc::ENTITY_CONTROLLER);
 		$reqUpdateComments = new ActionRequest($request);
 		$reqUpdateComments->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
 		$reqUpdateComments->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
@@ -362,5 +440,5 @@ try
 }
 catch (Exception $ex)
 {
-	throw $ex;
+	FTException::throwEx($ex);
 }

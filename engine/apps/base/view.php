@@ -20,7 +20,7 @@ class BaseView extends FTFireTrot implements IView
 		}
 	}
 
-	public function render($template, $data = array(), $bIsMakeOut = TRUE)
+	public function render($template, $data, $bIsMakeOut = TRUE)
 	{
 		try
 		{

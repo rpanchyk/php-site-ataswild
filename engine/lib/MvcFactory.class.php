@@ -19,6 +19,9 @@ class MvcFactory
 	{
 		try
 		{
+			if (is_null($strAppName))
+				return NULL;
+
 			// Define path to file
 			$path = FTFileSystem::pathCombine(APP_PATH, $strAppName, $strInstatnce . '.php');
 			if (!file_exists($path))

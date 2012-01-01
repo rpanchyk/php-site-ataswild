@@ -6,12 +6,15 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
  */
 class FTFileSystem extends FTFireTrot
 {
+	/**
+	 * Get file list in specified folder
+	 */
 	static public function getFileList($dir, $mask = '', $is_recursive = FALSE)
 	{
+		// http://www.hawkee.com/snippet/1749/
+
 		try
 		{
-			// http://www.hawkee.com/snippet/1749/
-
 			$result = array();
 
 			if (is_dir($dir))
@@ -55,6 +58,9 @@ class FTFileSystem extends FTFireTrot
 		}
 	}
 
+	/**
+	 * Get filepath from input args
+	 */
 	static public function pathCombine()
 	{
 		try

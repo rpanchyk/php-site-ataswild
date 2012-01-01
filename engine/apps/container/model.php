@@ -72,12 +72,12 @@ class ContainerModel extends BaseModel
 				foreach ($aParsedTags as $k => $v)
 				{
 					// Call controller each of item
-					$ctrl = MvcFactory::create($v['app'], 'controller');
+					$ctrl = MvcFactory::create($v['app'], ParamsMvc::ENTITY_CONTROLLER);
 					$req = new ActionRequest($request);
 					$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 					$req->params[Params::ALIAS] = $v['alias'];
 					$strResult = $ctrl->run($req, $response);
-					
+
 					if (FTArrayUtils::checkData(@$v['relations']))
 					{
 						foreach ($v['relations'] as $relKey => $relVal)
@@ -85,27 +85,27 @@ class ContainerModel extends BaseModel
 							if ($relKey == 'comments')
 							{
 								//echo '<pre>'; print_r($relVal); echo '</pre>';
-								
+
 								$req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
 								$dataResult = $ctrl->run($req, $response);
-								
-								$ctrlComments = MvcFactory::create($relVal['app'], 'controller');
-								
+
+								$ctrlComments = MvcFactory::create($relVal['app'], ParamsMvc::ENTITY_CONTROLLER);
+
 								// Add form
-								$dataFormParams = array('alias' => 'feedback', 'header_text' => 'Оставить отзыв','_parent_id'=>$dataResult[0]['_id']);
+								$dataFormParams = array('alias' => 'feedback', 'header_text' => 'Оставить отзыв', '_parent_id' => $dataResult[0]['_id']);
 								$strResult .= $ctrlComments->view->render('feedback_form', $dataFormParams, FALSE);
-								
+
 								$reqComments = new ActionRequest($request);
 								$reqComments->params[Params::OPERATION_NAME] = Params::OPERATION_GET;
 								$reqComments->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
-								$reqComments->params[ParamsSql::RESTRICTION] = 'is_active=1 AND _parent_id='.$dataResult[0]['_id'];
-								$reqComments->params[ParamsSql::ORDER_BY]='_date_create DESC';
+								$reqComments->params[ParamsSql::RESTRICTION] = 'is_active=1 AND _parent_id=' . $dataResult[0]['_id'];
+								$reqComments->params[ParamsSql::ORDER_BY] = '_date_create DESC';
 								$reqComments->params[ParamsConfig::DATA_OBJECT] = $relVal['app'];
 								$dataComments = $ctrlComments->run($reqComments, $response);
-								
+
 								//$this->view->render('index', array('content' => $strOutput));
 								//echo '<pre>'; print_r($dataComments); echo '</pre>';
-								
+
 								foreach ($dataComments as $aComment)
 								{
 									$aComment['alias'] = 'feedback';
@@ -118,11 +118,11 @@ class ContainerModel extends BaseModel
 						}
 						//$strResult .= '-0-0-0-0-';
 					}
-					
+
 					// Pack result
 					$aTagDataPair[$k] = $strResult;
 				}
-				//echo '<pre>'; print_r(array($aTagDataPair)); echo '</pre>';
+			//echo '<pre>'; print_r(array($aTagDataPair)); echo '</pre>';
 			return array($aTagDataPair);
 		}
 		catch (Exception $ex)
@@ -162,7 +162,7 @@ class ContainerModel extends BaseModel
 		try
 		{
 			// Ex: {static.feedback|relation:comments.feedback_comments;_parent_id;_id}
-			
+
 			if (!isset($request->params[Params::DATA]) || !FTArrayUtils::checkData($request->params[Params::DATA]))
 				return array();
 
@@ -299,13 +299,13 @@ class ContainerModel extends BaseModel
 				$reqParsedTags = new ActionRequest($request);
 				$reqParsedTags->params[Params::DATA] = $aTree[$i]['childs'];
 				$aParsedTags = $this->opParseTags($reqParsedTags, $response);
-//echo '<pre>'; print_r($aParsedTags); echo '</pre>';
+				//echo '<pre>'; print_r($aParsedTags); echo '</pre>';
 				if (FTArrayUtils::checkData($aParsedTags))
 					foreach ($aParsedTags as $k => $v)
 					{
 						// Call controller each of item
-						$controller = MvcFactory::create($v['app'], 'controller');
-						$model = MvcFactory::create($v['app'], 'model');
+						$controller = MvcFactory::create($v['app'], ParamsMvc::ENTITY_CONTROLLER);
+						$model = MvcFactory::create($v['app'], ParamsMvc::ENTITY_MODEL);
 						$req = new ActionRequest($request);
 						$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 						$req->params[Params::ALIAS] = $v['alias'];
@@ -342,43 +342,43 @@ class ContainerModel extends BaseModel
 							$aTree[$i]['childs'][$k] = $dataChilds[0];
 							//echo '<pre>'; print_r($aTree[$i]['childs'][$k]); echo '</pre>';
 						}
-						
+
 						//echo '<pre>'; print_r(@$v['relations']); echo '</pre>';
-						
+
 						if (FTArrayUtils::checkData(@$v['relations']))
 						{
 							foreach ($v['relations'] as $relKey => $relVal)
 							{
 								//echo '<pre>'; print_r($relVal); echo '</pre>';
-								
+
 								$aTree[$i]['childs'][$k]['childs'][$relKey]['app'] = $relVal['app'];
 								$aTree[$i]['childs'][$k]['childs'][$relKey]['_parent_id'] = $dataPrep[0]['_id'];
 								$aTree[$i]['childs'][$k]['childs'][$relKey]['name'] = $dataPrep[0]['name'];
-								
+
 								//$aTree[$i]['childs'][] = $relVal;
 								//$aTree[$i]['childs'][]['app'] = $relVal['app'];
 								// Get child container data
-/*
-								// Call controller each of item
-								$controller = MvcFactory::create($relVal['app'], 'controller');
-								$model = MvcFactory::create($relVal['app'], 'model');
-								$req = new ActionRequest($request);
-								$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
-								$req->params[Params::ALIAS] = $relVal['alias'];
-								$req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
-								$dataModel = $model->execute($req, $response, $controller);
-		
-								if (!FTArrayUtils::checkData($dataModel))
-								{
-									$aTree[$i]['childs'][$k]['childs'][$relKey] = array();
-									continue;
-								}
-		//echo '<pre>'; print_r($dataModel); echo '</pre>';
-								// Pack result
-								$dataPrep = $this->prepareTreeBranch($dataModel);
-								$aTree[$i]['childs'][$k]['childs'][$relKey] = $dataPrep[0];
-								$aTree[$i]['childs'][$k]['childs'][$relKey]['app'] = $relVal['app'];
-	*/							
+								/*
+								 // Call controller each of item
+								 $controller = MvcFactory::create($relVal['app'], ParamsMvc::ENTITY_CONTROLLER);
+								 $model = MvcFactory::create($relVal['app'], ParamsMvc::ENTITY_MODEL);
+								 $req = new ActionRequest($request);
+								 $req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
+								 $req->params[Params::ALIAS] = $relVal['alias'];
+								 $req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
+								 $dataModel = $model->execute($req, $response, $controller);
+										
+								 if (!FTArrayUtils::checkData($dataModel))
+								 {
+								 $aTree[$i]['childs'][$k]['childs'][$relKey] = array();
+								 continue;
+								 }
+								 //echo '<pre>'; print_r($dataModel); echo '</pre>';
+								 // Pack result
+								 $dataPrep = $this->prepareTreeBranch($dataModel);
+								 $aTree[$i]['childs'][$k]['childs'][$relKey] = $dataPrep[0];
+								 $aTree[$i]['childs'][$k]['childs'][$relKey]['app'] = $relVal['app'];
+								 */
 								//echo '<pre>'; print_r($aTree[$i]['childs'][$relKey]); echo '</pre>';
 							}
 						}
@@ -449,6 +449,8 @@ class ContainerModel extends BaseModel
 	{
 		try
 		{
+			global $engineConfig;
+
 			FTException::throwOnTrue(!FTArrayUtils::checkData($request->params['app_data']), 'No relation');
 
 			$aAppAlias = $request->params['app_data'];
@@ -458,7 +460,7 @@ class ContainerModel extends BaseModel
 
 			$aResult = array();
 
-			$controller = MvcFactory::create($aAppAlias['app'], 'controller');
+			$controller = MvcFactory::create($aAppAlias['app'], ParamsMvc::ENTITY_CONTROLLER);
 			$reqGet = new ActionRequest($request);
 			$reqGet->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 			$reqGet->params[Params::ALIAS] = $aAppAlias['alias'];
@@ -471,6 +473,7 @@ class ContainerModel extends BaseModel
 			{
 				// Get default data
 				$dataAdd = array();
+
 				// Get app config
 				$reqGetConfig = new ActionRequest($request);
 				$reqGetConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
@@ -479,12 +482,13 @@ class ContainerModel extends BaseModel
 				$resGetConfig = $controller->run($reqGetConfig, $response);
 
 				// Fill values
-				if (FTArrayUtils::checkData(@$resGetConfig['editor']['fields']))
-					foreach ($resGetConfig['editor']['fields'] as $confKey => $confValue)
+				if (FTArrayUtils::checkData(@$resGetConfig['editor'][ParamsConfig::EDITOR_DEFAULT]['fields']))
+					foreach ($resGetConfig['editor'][ParamsConfig::EDITOR_DEFAULT]['fields'] as $confKey => $confValue)
 						if (isset($confValue['default_value']))
 							$dataAdd[$confKey] = $confValue['default_value'];
 
 				$dataAdd['alias'] = $aAppAlias['alias'];
+				//$dataAdd['lang'] = $engineConfig['mvc_data']['lang_default'];
 
 				if ($aAppAlias['app'] == 'container')
 					$dataAdd['is_section'] = '0';

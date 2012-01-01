@@ -3,20 +3,21 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
 
 /**
  * Determine all artefacts for MVC from url
+ * (really, this is URL mapper)
  */
 class MvcData extends FTFireTrot
 {
-	protected $m_strLanguage;
-	protected $m_strFormatter;
-	protected $m_strController;
-	protected $m_strOperation;
-	protected $m_strId;
-	protected $m_strOther;
+	private $m_strLanguage;
+	private $m_strFormatter;
+	private $m_strController;
+	private $m_strOperation;
+	private $m_strId;
+	private $m_strOther;
 
-	protected $m_db;
-	protected $m_bIsStopDetermine;
+	private $m_db;
+	private $m_bIsStopDetermine;
 
-	static protected $instance = NULL;
+	static private $instance = NULL;
 
 	static public function getInstance($strUrl, $strLanguageDefault, $strFormatterDefault, $strControllerDefault, $strOperationDefault, $aLanguages = array(), $aFormatters = array(), $aControllers = array(), $db = NULL)
 	{
@@ -31,22 +32,6 @@ class MvcData extends FTFireTrot
 		{
 			throw $ex;
 		}
-	}
-
-	public function showResult()
-	{
-		$sep = '<div style="display:inline; padding-left:20px;">| </div>';
-
-		$result = '<div style="height:5px;"></div><div style="background: #FFCC99; border:2px solid #FF6633; padding:3px; font:12px Verdana;">'; // . $this->getElapsedTimeAsString($nPrecision) . '</div>';
-		$result .= '<b>Language:</b> ' . $this->getLanguage();
-		$result .= $sep . '<b>Formatter:</b> ' . $this->getFormatter();
-		$result .= $sep . '<b>Controller:</b> ' . $this->getController();
-		$result .= $sep . '<b>Operation:</b> ' . $this->getOperation();
-		$result .= $sep . '<b>Id:</b> ' . $this->getId();
-		$result .= $sep . '<b>Other:</b> ' . $this->getOther();
-		$result .= '</div>';
-
-		echo $result;
 	}
 
 	protected function __construct($strUrl, $strLanguageDefault, $strFormatterDefault, $strControllerDefault, $strOperationDefault, $aLanguages = array(), $aFormatters = array(), $aControllers = array(), $db = NULL)
@@ -95,6 +80,28 @@ class MvcData extends FTFireTrot
 		return $this->m_strOther;
 	}
 
+	/**
+	 * Show debug info
+	 */
+	public function showResult()
+	{
+		$sep = '<div style="display:inline; padding-left:20px;">| </div>';
+
+		$result = '<div style="height:5px;"></div><div style="background: #FFCC99; border:2px solid #FF6633; padding:3px; font:12px Verdana;">'; // . $this->getElapsedTimeAsString($nPrecision) . '</div>';
+		$result .= '<b>Language:</b> ' . $this->getLanguage();
+		$result .= $sep . '<b>Formatter:</b> ' . $this->getFormatter();
+		$result .= $sep . '<b>Controller:</b> ' . $this->getController();
+		$result .= $sep . '<b>Operation:</b> ' . $this->getOperation();
+		$result .= $sep . '<b>Id:</b> ' . $this->getId();
+		$result .= $sep . '<b>Other:</b> ' . $this->getOther();
+		$result .= '</div>';
+
+		echo $result;
+	}
+
+	/**
+	 * Set default values
+	 */
 	protected function setDefaults($strLanguageDefault, $strFormatterDefault, $strControllerDefault, $strOperationDefault)
 	{
 		try
@@ -109,12 +116,15 @@ class MvcData extends FTFireTrot
 			throw $ex;
 		}
 	}
+
+	/**
+	 * Get all mvc artefacts
+	 */
 	protected function parseUrl($strUrl, $aLanguages = array(), $aFormatters = array(), $aControllers = array())
 	{
 		try
 		{
 			$strTmpUrl = strtolower($strUrl);
-
 			$strTmpUrl = $this->parseLanguage($strTmpUrl, $aLanguages);
 			$strTmpUrl = $this->parseFormatter($strTmpUrl, $aFormatters);
 			$strTmpUrl = $this->parseController($strTmpUrl, $aControllers);
@@ -128,13 +138,16 @@ class MvcData extends FTFireTrot
 		}
 	}
 
+	/**
+	 * Get language from URL
+	 */
 	protected function parseLanguage($strUrl, $aLanguages = array())
 	{
 		try
 		{
 			$aUrlParts = explode(SLASH, $strUrl, 2);
 
-			if (count($aUrlParts) == 0 || empty($aUrlParts[0]) || !in_array($aUrlParts[0], $aLanguages))
+			if (!FTArrayUtils::checkData($aUrlParts) || !in_array($aUrlParts[0], $aLanguages))
 				return $strUrl;
 
 			// Set value
@@ -147,13 +160,16 @@ class MvcData extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Get formatter from URL
+	 */
 	protected function parseFormatter($strUrl, $aFormatters = array())
 	{
 		try
 		{
 			$aUrlParts = explode(SLASH, $strUrl, 2);
 
-			if (count($aUrlParts) == 0 || empty($aUrlParts[0]) || !in_array($aUrlParts[0], $aFormatters))
+			if (!FTArrayUtils::checkData($aUrlParts) || !in_array($aUrlParts[0], $aFormatters))
 				return $strUrl;
 
 			// Set value
@@ -166,18 +182,21 @@ class MvcData extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Get controller from URL
+	 */
 	protected function parseController($strUrl, $aControllers = array())
 	{
 		try
 		{
 			$aUrlParts = explode(SLASH, $strUrl, 2);
 
-			if (count($aUrlParts) == 0 || empty($aUrlParts[0]))
+			if (!FTArrayUtils::checkData($aUrlParts))
 				return $strUrl;
 
-			if (is_null($aControllers) || !is_array($aControllers) || !count($aControllers))
+			if (!FTArrayUtils::checkData($aControllers))
 			{
-				$aControllers = array();
+				FTException::throwOnTrue(is_null($this->m_db), 'No db connector');
 
 				// Get objects from DB
 				$params = array();
@@ -186,7 +205,7 @@ class MvcData extends FTFireTrot
 				$params[ParamsSql::RESTRICTION_DATA] = array(':alias' => strtolower($aUrlParts[0]));
 				$dataControllers = $this->m_db->get($params);
 
-				if (!isset($dataControllers) || !is_array($dataControllers) || !count($dataControllers))
+				if (!FTArrayUtils::checkData($dataControllers))
 				{
 					// If no controller - skip operation
 					$this->m_bIsStopDetermine = TRUE;
@@ -205,6 +224,9 @@ class MvcData extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Get operation from URL
+	 */
 	protected function parseOperation($strUrl)
 	{
 		try
@@ -214,14 +236,8 @@ class MvcData extends FTFireTrot
 
 			$aUrlParts = explode(SLASH, $strUrl, 2);
 
-			if (count($aUrlParts) == 0 || empty($aUrlParts[0]))
+			if (!FTArrayUtils::checkData($aUrlParts))
 				return $strUrl;
-
-			// Get operations
-			// @todo
-
-			//			if (!preg_match("/^[^0-9][a-z]+$/", $aUrlParts[0]))
-			//			FTStringUtils::trimStart($strUrl, $aUrlParts[0] . SLASH);
 
 			// Set value
 			$this->m_strOperation = $aUrlParts[0];
@@ -233,6 +249,9 @@ class MvcData extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Get ID from URL
+	 */
 	protected function parseId($strUrl)
 	{
 		try
@@ -242,7 +261,7 @@ class MvcData extends FTFireTrot
 
 			$aUrlParts = explode(SLASH, $strUrl, 2);
 
-			if (count($aUrlParts) == 0)
+			if (!FTArrayUtils::checkData($aUrlParts))
 				return $strUrl;
 
 			// Set value
@@ -255,6 +274,9 @@ class MvcData extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Get other data from URL
+	 */
 	protected function parseOther($strUrl)
 	{
 		try
@@ -264,11 +286,11 @@ class MvcData extends FTFireTrot
 
 			$aUrlParts = explode(SLASH, $strUrl, 2);
 
-			if (count($aUrlParts) == 0)
+			if (!FTArrayUtils::checkData($aUrlParts))
 				return $strUrl;
 
 			// Set value
-			$this->m_strOther = $aUrlParts[0];
+			$this->m_strOther = implode(SLASH, $aUrlParts);
 
 			return FTStringUtils::trimStart($strUrl, $aUrlParts[0] . SLASH);
 		}

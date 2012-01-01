@@ -1,4 +1,9 @@
 <?php
+require_once dirname(__FILE__) . '/../inc/cde.inc.php';
+
+/**
+ * Run before engine start
+ */
 
 // Check system requirements
 FTCore::checkSystemRequirements();

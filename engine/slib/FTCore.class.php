@@ -10,14 +10,20 @@ class FTCore extends FTFireTrot
 
 	/**
 	 * Checks system requirements
+	 * @return Boolean
 	 */
 	static public function checkSystemRequirements()
 	{
 		try
 		{
-			//global $engineConfig;
+			global $engineConfig;
 
-			return TRUE;
+			// Check PHP version
+			if (version_compare(PHP_VERSION, $engineConfig['requirements']['php_min_version'], '<'))
+				throw new Exception('Newer PHP version required: ' . $engineConfig['requirements']['php_min_version'] . '. Current version: ' . PHP_VERSION);
+
+			// Check session started
+			FTException::throwOnTrue(session_id() === '', 'Session is not started');
 		}
 		catch (Exception $ex)
 		{
@@ -26,7 +32,12 @@ class FTCore extends FTFireTrot
 	}
 
 	/**
-	 * Includes (loads) a file into current context
+	 * Load file into current context
+	 * @param String $strDirPath - path to folder
+	 * @param String $strName - file prefix
+	 * @param Boolean $bIsIncludeOnce - include once (default: TRUE)
+	 * @param String $strSuffix - file suffix
+	 * @param String $strExtension - file extension
 	 */
 	static public function loadFile($strDirPath, $strName, $bIsIncludeOnce = TRUE, $strSuffix = '', $strExtension = self::fileDefaultExtension)
 	{
@@ -44,6 +55,13 @@ class FTCore extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Load class into current context
+	 * @param String $strDirPath - path to folder
+	 * @param String $strName - class name
+	 * @param Boolean $bIsIncludeOnce - include once (default: TRUE)
+	 * @param String $strExtension - file extension (default: 'php')
+	 */
 	static public function loadClass($strDirPath, $strName, $bIsIncludeOnce = TRUE, $strExtension = self::fileDefaultExtension)
 	{
 		try
@@ -55,6 +73,13 @@ class FTCore extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Load config into current context
+	 * @param String $strDirPath - path to folder
+	 * @param String $strName - config name
+	 * @param Boolean $bIsIncludeOnce - include once (default: TRUE)
+	 * @param String $strExtension - file extension (default: 'php')
+	 */
 	static public function loadConfig($strDirPath, $strName, $bIsIncludeOnce = TRUE, $strExtension = self::fileDefaultExtension)
 	{
 		try
@@ -66,6 +91,31 @@ class FTCore extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Load include into current context
+	 * @param String $strDirPath - path to folder
+	 * @param String $strName - include name
+	 * @param Boolean $bIsIncludeOnce - include once (default: TRUE)
+	 * @param String $strExtension - file extension (default: 'php')
+	 */
+	static public function loadInclude($strDirPath, $strName, $bIsIncludeOnce = TRUE, $strExtension = self::fileDefaultExtension)
+	{
+		try
+		{
+			self::loadFile($strDirPath, $strName, $bIsIncludeOnce, 'inc', $strExtension);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	/**
+	 * Load interface into current context
+	 * @param String $strDirPath - path to folder
+	 * @param String $strName - interface name
+	 * @param Boolean $bIsIncludeOnce - include once (default: TRUE)
+	 * @param String $strExtension - file extension (default: 'php')
+	 */
 	static public function loadInterface($strDirPath, $strName, $bIsIncludeOnce = TRUE, $strExtension = self::fileDefaultExtension)
 	{
 		try
@@ -78,6 +128,14 @@ class FTCore extends FTFireTrot
 		}
 	}
 
+	/**
+	 * Return path to file
+	 * @param String $strDirPath - path to folder
+	 * @param String $strEntityName - partial file name
+	 * @param String $strEntity - file type (@see EntityFileType)
+	 * @param String $strExtension - file extension
+	 * @return String
+	 */
 	static public function getFilePath($strDirPath, $strEntityName, $strEntity = '', $strExtension = self::fileDefaultExtension)
 	{
 		try
@@ -87,16 +145,14 @@ class FTCore extends FTFireTrot
 			if (!defined('DS'))
 				throw new Exception($strErrorMsg . 'Constant "DS" is not defined');
 
-			if (empty($strDirPath))
-				throw new Exception($strErrorMsg . 'Empty folder path');
+			if (empty($strDirPath) || !is_dir($strDirPath))
+				throw new Exception($strErrorMsg . 'Directory "' . $strDirPath . '" is not valid');
 
 			if (empty($strEntityName))
 				throw new Exception($strErrorMsg . 'Empty ' . $strEntity . ' name');
 
-			if (!is_dir($strDirPath))
-				throw new Exception($strErrorMsg . 'Directory "' . $strDirPath . '" is not valid');
-
-			$filePath = rtrim($strDirPath, DS) . DS . $strEntityName . (!empty($strEntity) ? ('.' . $strEntity) : '') . '.' . $strExtension;
+			$fileName = $strEntityName . (!empty($strEntity) ? ('.' . $strEntity) : '') . '.' . $strExtension;
+			$filePath = rtrim($strDirPath, DS) . DS . $fileName;
 
 			if (!file_exists($filePath))
 				throw new Exception($strErrorMsg . 'File "' . $filePath . '" not found', E_ERROR);
@@ -109,6 +165,10 @@ class FTCore extends FTFireTrot
 		}
 	}
 
+	/**
+	 * Create dirs
+	 * @param Array $aDirs - list of folders
+	 */
 	static public function createDirs(Array $aDirs)
 	{
 		try
@@ -119,6 +179,8 @@ class FTCore extends FTFireTrot
 					continue;
 
 				FTException::throwOnTrue(!mkdir($dir), 'Cannot create dir: "' . $dir . '"');
+
+				FTException::throwOnTrue(!chmod($dir, 0666), 'Cannot chmod dir: "' . $dir . '"');
 			}
 		}
 		catch (Exception $ex)

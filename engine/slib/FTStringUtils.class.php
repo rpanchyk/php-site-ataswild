@@ -6,18 +6,22 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
  */
 class FTStringUtils extends FTFireTrot
 {
+	/**
+	 * Check string contains other string
+	 * @param string $haystack - input string
+	 * @param string $needle - string to find
+	 * @param bool $case - case sensitivity, default = TRUE
+	 * @param int $pos - position, default = 0
+	 */
 	static function contains($haystack, $needle, $case = TRUE, $pos = 0)
 	{
+		// http://stackoverflow.com/questions/834303/php-startswith-and-endswith-functions/3395821#3395821
 		try
 		{
-			// http://stackoverflow.com/questions/834303/php-startswith-and-endswith-functions/3395821#3395821
-
 			if ($case)
-				$result = (strpos($haystack, $needle, 0) === $pos);
-			else
-				$result = (stripos($haystack, $needle, 0) === $pos);
+				return strpos($haystack, $needle, 0) === $pos;
 
-			return $result;
+			return stripos($haystack, $needle, 0) === $pos;
 		}
 		catch (Exception $ex)
 		{
@@ -25,6 +29,12 @@ class FTStringUtils extends FTFireTrot
 		}
 	}
 
+	/**
+	 * Check string starts with other string
+	 * @param string $haystack - input string
+	 * @param string $needle - string to find
+	 * @param bool $case - case sensitivity, default = TRUE
+	 */
 	static function startsWith($haystack, $needle, $case = TRUE)
 	{
 		try
@@ -36,6 +46,12 @@ class FTStringUtils extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Check string ends with other string
+	 * @param string $haystack - input string
+	 * @param string $needle - string to find
+	 * @param bool $case - case sensitivity, default = TRUE
+	 */
 	static function endsWith($haystack, $needle, $case = TRUE)
 	{
 		try
@@ -48,6 +64,11 @@ class FTStringUtils extends FTFireTrot
 		}
 	}
 
+	/**
+	 * Trim begin of string
+	 * @param string $haystack - input string
+	 * @param string $needle - string to find
+	 */
 	static function trimStart($haystack, $needle)
 	{
 		try
@@ -59,6 +80,11 @@ class FTStringUtils extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Trim end of string
+	 * @param string $haystack - input string
+	 * @param string $needle - string to find
+	 */
 	static function trimEnd($haystack, $needle)
 	{
 		try
@@ -71,7 +97,12 @@ class FTStringUtils extends FTFireTrot
 		}
 	}
 
-	static function convertCp1251ToUtf8New($strInput)
+	/**
+	 * Convert string from cp1251 to utf-8
+	 * @param string $string - input string in cp1251 encoding
+	 * @return string in utf-8 encoding
+	 */
+	static function convertCp1251ToUtf8($string)
 	{
 		try
 		{
@@ -101,7 +132,7 @@ class FTStringUtils extends FTFireTrot
 			return preg_replace('#[\x80-\xFF]#se', ' "$0" >= "\xF0" ? "\xD1".chr(ord("$0")-0x70) :
 		                       ("$0" >= "\xC0" ? "\xD0".chr(ord("$0")-0x30) :
 		                        (isset($table["$0"]) ? $table["$0"] : "")
-		                       )', $strInput);
+		                       )', $string);
 		}
 		catch (Exception $ex)
 		{
@@ -116,18 +147,7 @@ class FTStringUtils extends FTFireTrot
 	{
 		try
 		{
-			global $request;
-
-			FTException::throwOnTrue(!FTArrayUtils::checkData(@$request->dataWeb->server), 'No data to get CRLF value');
-
-			// Default
-			$CRLF = "\n";
-
-			// Get specific value
-			if (strpos($request->dataWeb->server['SCRIPT_FILENAME'], ':'))
-				$CRLF = "\r" . $CRLF;
-
-			return $CRLF;
+			return PHP_EOL;
 		}
 		catch (Exception $ex)
 		{
@@ -136,13 +156,64 @@ class FTStringUtils extends FTFireTrot
 	}
 
 	/**
-	 * Encrypt input string
+	 * Encrypt input string with MD5
 	 */
 	static function cryptString($string)
 	{
 		try
 		{
 			return md5($string);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+
+	/**
+	 * Escapes a string with slashes
+	 * @param Object $object - String or Array
+	 */
+	static public function addSlashes($object)
+	{
+		try
+		{
+			if (is_array($object))
+			{
+				$res = array();
+				foreach ($object as $entryKey => $entryValue)
+					$res[$entryKey] = self::addSlashes($entryValue);
+				return $res;
+			}
+			elseif (is_string($object))
+				return addslashes($object);
+			else
+				return $object;
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	/**
+	 * Remove slashes from string
+	 * @param Object $object - String or Array
+	 */
+	static public function stripSlashes($object)
+	{
+		try
+		{
+			if (is_array($object))
+			{
+				$res = array();
+				foreach ($object as $entryKey => $entryValue)
+					$res[$entryKey] = self::addSlashes($entryValue);
+				return $res;
+			}
+			elseif (is_string($object))
+				return stripslashes($object);
+			else
+				return $object;
 		}
 		catch (Exception $ex)
 		{

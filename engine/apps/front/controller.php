@@ -2,17 +2,26 @@
 require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 
 /**
- * Front controller
+ * Front controller - redirect requests to other controllers
  */
 class FrontController extends BaseController
 {
 	public function __construct($args = NULL)
 	{
-		$args = FTArrayUtils::checkData($args, 0) ? $args : array();
-		$args[ParamsMvc::NO_MODEL] = TRUE;
-		$args[ParamsMvc::CUSTOM_VIEW] = ParamsMvc::DEFAULT_VIEW_NAME;
+		try
+		{
+			// Get arguments
+			$args = FTArrayUtils::checkData($args, 0) ? $args : array();
 
-		parent::__construct($args);
+			// Remove model
+			$args[ParamsMvc::NO_MODEL] = TRUE;
+
+			parent::__construct($args);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
 	}
 
 	public function run(ActionRequest & $request, ActionResponse & $response)
@@ -44,12 +53,13 @@ class FrontController extends BaseController
 	{
 		try
 		{
-			$controller = MvcFactory::create('container', 'controller');
+			$controller = MvcFactory::create('container', ParamsMvc::ENTITY_CONTROLLER);
 
 			$req = new ActionRequest($request);
-			$req->params[Params::OPERATION_NAME] = 'get_by_alias';
+			$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 			$req->params[Params::ALIAS] = $request->dataMvc->getController();
 			$strOutput = $controller->run($req, $response);
+
 			$this->view->render('index', array('content' => $strOutput));
 		}
 		catch (Exception $ex)
@@ -61,7 +71,7 @@ class FrontController extends BaseController
 	{
 		try
 		{
-			throw new Exception('Not implemented');
+			throw new Exception('Not implemented: processXmlContent');
 		}
 		catch (Exception $ex)
 		{

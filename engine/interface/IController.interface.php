@@ -6,5 +6,5 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
  */
 interface IController
 {
-	public function run(ActionRequest & $request, ActionResponse & $response);
+	function run(ActionRequest & $request, ActionResponse & $response);
 }

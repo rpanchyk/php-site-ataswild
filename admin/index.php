@@ -25,6 +25,7 @@ require_once dirname(__FILE__) . '/php/main.php';
 <script type="text/javascript" src="js/jquery.ui.core.js"></script>
 <script type="text/javascript" src="js/webtoolkit.url.js"></script>
 <script type="text/javascript" src="../engine/editor/ckeditor_3.6.2/ckeditor.js"></script>
+<script type="text/javascript" src="js/jquery.cookie.js"></script>
 
 <script type="text/javascript">
 $(document).ready(function () {
@@ -314,7 +315,10 @@ else
 {
 ?>
 	<div id="container">
-		<div class="ui-layout-north"><a>Здравствуйте, <?php echo @$authUser['name']; ?>!</a> [<a href="/admin/php/handler.php?do_logout=1">Выход</a>]</div>
+		<div class="ui-layout-north">
+			<a>Здравствуйте, <?php echo @$authUser['name']; ?>!</a> [<a href="/admin/php/handler.php?do_logout=1">Выход</a>]
+			<div style="float:right;"><?php showLangs(); ?></div>
+		</div>
 		<div class="ui-layout-west" id="cptree"></div>
 		<div class="ui-layout-center"><div id="cnt"></div></div>
 	</div>

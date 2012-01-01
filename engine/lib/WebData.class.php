@@ -2,26 +2,32 @@
 require_once dirname(__FILE__) . '/../inc/cde.inc.php';
 
 /**
- * Process all super global variables
+ * Process super global variables
  */
 class WebData
 {
 	static private $instance = NULL;
 
-	static public function getInstance($aSuperGlobals = array(), $bISecureData = TRUE, $db = NULL)
+	/**
+	 * Get WebData object
+	 */
+	static public function getInstance($aSuperGlobals = array(), $bISecureData = TRUE)
 	{
 		if (self::$instance == NULL)
-			self::$instance = new self($aSuperGlobals, $bISecureData, $db);
+			self::$instance = new self($aSuperGlobals, $bISecureData);
 
 		return self::$instance;
 	}
 
-	protected function __construct($aSuperGlobals = array(), $bISecureData = TRUE, $db = NULL)
+	/**
+	 * Hidden constructor
+	 */
+	protected function __construct($aSuperGlobals = array(), $bISecureData = TRUE)
 	{
 		try
 		{
 			if ($bISecureData)
-				$this->SecureWebData($aSuperGlobals, $db);
+				$this->secureWebData($aSuperGlobals);
 		}
 		catch (Exception $ex)
 		{
@@ -29,16 +35,18 @@ class WebData
 		}
 	}
 
-	public function SecureWebData($aSuperGlobals, $db = NULL)
+	/**
+	 * Move global variables to WebData object
+	 */
+	protected function secureWebData($aSuperGlobals)
 	{
 		try
 		{
 			if (!is_array($aSuperGlobals) || count($aSuperGlobals) == 0)
-				return FALSE;
+				return;
 
-			$this->UnregisterGlobals($aSuperGlobals);
-			$this->ShiftGlobals($aSuperGlobals, TRUE, $db);
-			$this->RemoveGlobals($aSuperGlobals);
+			$this->shiftGlobals($aSuperGlobals, TRUE);
+			$this->removeGlobals($aSuperGlobals);
 		}
 		catch (Exception $ex)
 		{
@@ -46,27 +54,10 @@ class WebData
 		}
 	}
 
-	protected function UnregisterGlobals($aSuperGlobals)
-	{
-		// http://php.tonnikala.org/manual/pt_BR/security.globals.php#85447
-
-		try
-		{
-			if (!ini_get('register_globals'))
-				return FALSE;
-
-			foreach ($aSuperGlobals as $name)
-				foreach ($GLOBALS[$name] as $key => $value)
-					if (isset($GLOBALS[$key]))
-						unset($GLOBALS[$key]);
-		}
-		catch (Exception $ex)
-		{
-			throw $ex;
-		}
-	}
-
-	protected function ShiftGlobals($aSuperGlobals, $bIsMakeSafety = FALSE, $db = NULL)
+	/**
+	 * Shift params from globals to local variables
+	 */
+	protected function shiftGlobals($aSuperGlobals, $bIsMakeSafety = FALSE)
 	{
 		try
 		{
@@ -80,7 +71,6 @@ class WebData
 			if (!isset($GLOBALS['_ENV']))
 				$GLOBALS['_ENV'] = $_ENV;
 
-			// Shift params from globals to local variables
 			foreach ($aSuperGlobals as $name)
 			{
 				if (is_array($GLOBALS[$name]))
@@ -89,13 +79,10 @@ class WebData
 						if ($bIsMakeSafety)
 						{
 							// Safe keys
-							$key = addslashes($key);
+							$key = FTStringUtils::addSlashes($key);
 
 							// Safe values
-							if ($db != NULL)
-								$value = $db->quote($value);
-							else
-								$value = addslashes($value);
+							$value = FTStringUtils::addSlashes($value);
 						}
 						// Set vars
 						$this->{
@@ -110,14 +97,27 @@ class WebData
 		}
 	}
 
-	protected function RemoveGlobals($aSuperGlobals)
+	/**
+	 Remove GLOBAL variables
+	 */
+	protected function removeGlobals($aSuperGlobals)
 	{
+		// http://php.tonnikala.org/manual/pt_BR/security.globals.php#85447
 		try
 		{
-			// Remove all globals
+			if (!ini_get('register_globals'))
+				return FALSE;
+
 			foreach ($aSuperGlobals as $name)
-				if (!is_null(@$GLOBALS[strtoupper($name)]))
-					unset($GLOBALS[strtoupper($name)]);
+			{
+				if (is_array($GLOBALS[$name]))
+					foreach ($GLOBALS[$name] as $key => $value)
+						if (isset($GLOBALS[$key]))
+							unset($GLOBALS[$key]);
+
+				if (isset($GLOBALS[$name]))
+					unset($GLOBALS[$name]);
+			}
 		}
 		catch (Exception $ex)
 		{

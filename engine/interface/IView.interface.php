@@ -6,5 +6,5 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
  */
 interface IView
 {
-	public function render($template, $data, $bIsMakeOut = TRUE);
+	function render($template, $data, $bIsMakeOut = TRUE);
 }

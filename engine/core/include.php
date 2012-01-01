@@ -8,25 +8,14 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
 // Defines
 require_once dirname(__FILE__) . '/../inc/define.inc.php';
 
-// Exception class
-require_once SLIB_PATH . DS . 'FTException.class.php';
-
-// Functionality
-require_once INC_PATH . DS . 'enum.inc.php';
-require_once INC_PATH . DS . 'function.inc.php';
-
-// Base class
+// Base & Core classes
 require_once SLIB_PATH . DS . 'FTFireTrot.class.php';
-
-// Core class
 require_once SLIB_PATH . DS . 'FTCore.class.php';
 
-// Time profiler
-FTCore::loadClass(SLIB_PATH, 'FTTimeProfiler');
-
-// Server & engine configurations
-FTCore::loadConfig(CONF_PATH, 'server');
-FTCore::loadConfig(CONF_PATH, 'engine');
+// Global functionality
+FTCore::loadInclude(INC_PATH, 'enum');
+FTCore::loadInclude(INC_PATH, 'function');
+FTCore::loadInclude(INC_PATH, 'global');
 
 // Interfaces
 FTCore::loadInterface(INTERFACE_PATH, 'IController');
@@ -40,8 +29,10 @@ FTCore::loadInterface(INTERFACE_PATH, 'IHtmlable');
 FTCore::loadClass(SLIB_PATH, 'FTStringUtils');
 FTCore::loadClass(SLIB_PATH, 'FTArrayUtils');
 FTCore::loadClass(SLIB_PATH, 'FTFileSystem');
+FTCore::loadClass(SLIB_PATH, 'FTTimeProfiler');
+FTCore::loadClass(SLIB_PATH, 'FTException');
 
-// Library classes
+// Application library classes
 FTCore::loadClass(LIB_PATH, 'ActionRequest');
 FTCore::loadClass(LIB_PATH, 'ActionResponse');
 FTCore::loadClass(LIB_PATH, 'DatabaseDriver');
@@ -50,5 +41,16 @@ FTCore::loadClass(LIB_PATH, 'MvcData');
 FTCore::loadClass(LIB_PATH, 'MvcFactory');
 FTCore::loadClass(LIB_PATH, 'Guid');
 
-// Global variables
-require_once INC_PATH . DS . 'global.inc.php';
+// Server & engine configurations
+FTCore::loadConfig(CONF_PATH, 'server');
+FTCore::loadConfig(ROOT_PATH, 'engine');
+
+// Prepare engine before start
+FTCore::loadInclude(INC_PATH, 'prepare');
+
+// Create base controller (just for existance)
+$base = MvcFactory::create('base', ParamsMvc::ENTITY_CONTROLLER);
+
+// Create initial request & response
+$request = new ActionRequest(NULL);
+$response = new ActionResponse();

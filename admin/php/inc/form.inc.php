@@ -4,11 +4,8 @@ function getForm($appName, $rowId, $data, $dataHidden = array(), $formParams = a
 {
 	global $request, $response, $handlerPath;
 
-	if (empty($appName))
-		throw new Exception('No app');
-
-	if (!intval($rowId))
-		throw new Exception('No ID');
+	FTException::throwOnTrue(empty($appName), 'No app');
+	//FTException::throwOnTrue(empty($rowId), 'No ID');
 
 	// Result html
 	$res = '';
@@ -21,7 +18,7 @@ function getForm($appName, $rowId, $data, $dataHidden = array(), $formParams = a
 		$editorID = isset($formParams['editor']) ? $formParams['editor'] : 'default';
 
 		// Get app config
-		$controller = MvcFactory::create($appName, 'controller');
+		$controller = MvcFactory::create($appName, ParamsMvc::ENTITY_CONTROLLER);
 		$reqGetConfig = new ActionRequest($request);
 		$reqGetConfig->params[Params::OPERATION_NAME] = 'get_config';
 		$reqGetConfig->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
@@ -140,7 +137,7 @@ function getForm($appName, $rowId, $data, $dataHidden = array(), $formParams = a
 			$res .= '<input type="hidden" id="' . $k . '" name="' . $k . '" value="' . $v . '" />';
 
 		$res .= '<input type="hidden" id="app" name="app" value="' . $appName . '" />';
-		$res .= '<input type="hidden" id="_id" name="_id" value="' . $rowId . '" />';
+		//$res .= '<input type="hidden" id="alias" name="alias" value="' . $rowId . '" />';
 
 		// Set form result
 		if (isset($formParams['form_result']) && !empty($formParams['form_result']))
@@ -176,7 +173,7 @@ function getList($appName, $data, $dataHidden = array(), $formParams = array())
 			$editorID = isset($formParams['editor']) ? $formParams['editor'] : ParamsConfig::EDITOR_LIST;
 
 			// Get app config
-			$controller = MvcFactory::create($appName, 'controller');
+			$controller = MvcFactory::create($appName, ParamsMvc::ENTITY_CONTROLLER);
 			$reqGetConfig = new ActionRequest($request);
 			$reqGetConfig->params[Params::OPERATION_NAME] = 'get_config';
 			$reqGetConfig->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
@@ -234,13 +231,13 @@ function getList($appName, $data, $dataHidden = array(), $formParams = array())
 	}
 }
 
-function processForm($appName, $rowId = -1, $dataObject = NULL, $formParams = array())
+function processForm($appName, $rowId = NULL, $dataObject = NULL, $formParams = array())
 {
 	global $request, $response;
 
 	$result = array();
 
-	$controller = MvcFactory::create($appName, 'controller');
+	$controller = MvcFactory::create($appName, ParamsMvc::ENTITY_CONTROLLER);
 
 	// Get editor
 	if (isset($formParams['editor']))
@@ -293,21 +290,19 @@ function processForm($appName, $rowId = -1, $dataObject = NULL, $formParams = ar
 	$req->params[ParamsConfig::EDITOR_ID] = $editorID;
 	$req->params[Params::DATA] = $data;
 
-	if ($rowId != - 1)
+	if (isset($rowId))
 	{
-		if (!intval($rowId) || $rowId <= 0)
-			throw new Exception('RowID is invalid');
-
 		// Update record
 		$req->params[Params::OPERATION_NAME] = 'update';
-		$req->params[ParamsSql::RESTRICTION] = '_id=' . $rowId;
+		$req->params[ParamsSql::RESTRICTION] = 'alias=\'' . $rowId . '\'';
 	}
 	else
 	{
 		// Insert record
 		$req->params[Params::OPERATION_NAME] = 'add';
 	}
-
+		echo '<pre>'; print_r($req->params); echo '</pre>';
+	
 	$res = NULL;
 	$exMessage = '';
 	try

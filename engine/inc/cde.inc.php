@@ -10,9 +10,9 @@ if (@ENGINE_IS_STARTED !== 'y')
 	// Clean output buffer
 	ob_end_clean();
 
-	//require_once dirname(__FILE__) . '/../core/include.php';
-
-	die('Hack found!');
+	// Show message
+	die('Xacked by dummy!');
 }
 
-// Write this to file: require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
+// Write this to file:
+// require_once dirname(__FILE__) . '/../../inc/cde.inc.php';

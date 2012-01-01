@@ -13,7 +13,7 @@ class BaseModel extends FTFireTrot implements IModel
 	{
 		try
 		{
-			$this->m_entityName = FTStringUtils::trimEnd(get_class($this), 'Model');
+			$this->m_entityName = FTStringUtils::trimEnd(get_class($this), ucfirst(ParamsMvc::ENTITY_MODEL));
 			$this->m_Controller = NULL;
 		}
 		catch (Exception $ex)
@@ -240,13 +240,11 @@ class BaseModel extends FTFireTrot implements IModel
 			// Check params
 			FTException::throwOnTrue(!isset($request->params[Params::ID]) || !intval($request->params[Params::ID]), 'No ' . Params::ID);
 
-			// Get data
 			$params = array();
 			$params[ParamsSql::TABLE] = $this->m_entityName;
 			$params[ParamsSql::RESTRICTION] = '_id=:_id';
 			$params[ParamsSql::RESTRICTION_DATA] = array(':_id' => $request->params[Params::ID]);
 			$params[ParamsSql::LIMIT] = '1';
-
 			return $request->db->get($params);
 		}
 		catch (Exception $ex)

@@ -8,7 +8,7 @@ class CommentsModel extends BaseModel
 		try
 		{
 			FTException::throwOnTrue(!isset($request->params[Params::ALIAS]) || empty($request->params[Params::ALIAS]), 'No ' . Params::ALIAS);
-	
+
 			// Get container
 			$params = array();
 			$params[ParamsSql::TABLE] = $this->m_entityName;
@@ -16,13 +16,13 @@ class CommentsModel extends BaseModel
 			$params[ParamsSql::RESTRICTION_DATA] = array(':alias' => $request->params[Params::ALIAS]);
 			$params[ParamsSql::LIMIT] = '1';
 			$data = $request->db->get($params);
-	
+
 			if (!FTArrayUtils::checkData($data))
 			{
 				FTException::saveEx(new Exception('No data for entity: ' . $params[ParamsSql::TABLE] . ' with alias: ' . $request->params[Params::ALIAS]));
 				return $data;
 			}
-	
+
 			return $data;
 		}
 		catch (Exception $ex)

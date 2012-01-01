@@ -31,8 +31,25 @@ class DatabaseDriver extends FTFireTrot
 	{
 		try
 		{
+			// Connection string
+			$dsn = "$dbtype:host=$host;port=$port;dbname=$dbname";
+
+			// Default PDO class name
+			$class = 'PDO';
+
+			// Get driver name
+			$driver = strtolower(trim(substr($dsn, 0, strpos($dsn, ':'))));
+
+			// Check PDO
+			if (!$driver || !class_exists('PDO') || !extension_loaded('pdo_' . $driver))
+			{
+				// Docs: http://sourceforge.net/projects/phppdo/
+				require_once EXTERNAL_PATH . '/phppdo/phppdo.php';
+				$class = 'PHPPDO';
+			}
+
 			// Init connection
-			$this->m_dbConn = new PDO("$dbtype:host=$host;port=$port;dbname=$dbname", $username, $passwd, $options);
+			$this->m_dbConn = new $class($dsn, $username, $passwd, $options);
 
 			// Set some vars for convenience
 			$this->m_dbType = $dbtype;
@@ -47,7 +64,6 @@ class DatabaseDriver extends FTFireTrot
 			$this->m_cacheDirPath = $cacheDirPath;
 			$this->m_cacheTtl = intval($cacheTtl);
 			$this->m_bIsUseCache = $this->m_cacheTtl > 0 ? TRUE : FALSE;
-			//$this->m_bIsUseCache = FALSE;
 
 			// Set encoding
 			$this->m_dbConn->exec('SET NAMES ' . $charset);
@@ -153,6 +169,8 @@ class DatabaseDriver extends FTFireTrot
 	{
 		try
 		{
+			$name = strtolower($name);
+
 			$tableName = '';
 
 			// Get all tables
@@ -186,7 +204,7 @@ class DatabaseDriver extends FTFireTrot
 						// http://www.sitepoint.com/forums/showthread.php?497257-PDO-getColumnMeta-bug
 
 						// Fetch all columns and parse them
-						$sth = $this->m_dbConn->prepare('SHOW COLUMNS FROM ' . $tableName);
+						$sth = $this->m_dbConn->prepare('SHOW COLUMNS FROM ' . $this->getTableName($tableName));
 						$columns = $this->executePDOStatement($sth, '', PDO::FETCH_ASSOC, $cacheTtl);
 						foreach ($columns as $key => $col)
 						{
@@ -302,6 +320,9 @@ class DatabaseDriver extends FTFireTrot
 		}
 	}
 
+	/**
+	 * Execute sql SELECT statement
+	 */
 	public function get($params, $pdoFetchType = PDO::FETCH_ASSOC, $cacheTtl = NULL)
 	{
 		try
@@ -331,7 +352,7 @@ class DatabaseDriver extends FTFireTrot
 
 			// Key-info for cache file
 			$cacheAddKey = '';
-			
+
 			// Bind values
 			if (isset($params[ParamsSql::RESTRICTION]) && !empty($params[ParamsSql::RESTRICTION]) && isset($params[ParamsSql::RESTRICTION_DATA]) && count($params[ParamsSql::RESTRICTION_DATA]))
 			{
@@ -339,18 +360,21 @@ class DatabaseDriver extends FTFireTrot
 				foreach ($params[ParamsSql::RESTRICTION_DATA] as $k => $v)
 				{
 					$sth->bindValue($k, $v, (isset($pdoParams[$k]['pdoType']) ? $pdoParams[$k]['pdoType'] : NULL));
-					
+
 					$cacheAddKey .= CRLF . $k . '=' . $v;
 				}
 			}
 
-			return $this->stripSlashesData($this->executePDOStatement($sth, $cacheAddKey, $pdoFetchType, $cacheTtl));
+			return FTStringUtils::stripSlashes($this->executePDOStatement($sth, $cacheAddKey, $pdoFetchType, $cacheTtl));
 		}
 		catch (Exception $ex)
 		{
 			throw $ex;
 		}
 	}
+	/**
+	 * Execute sql INSERT statement
+	 */
 	public function add($params, $data)
 	{
 		// Syntax SQL:
@@ -380,10 +404,16 @@ class DatabaseDriver extends FTFireTrot
 			// Get table name
 			$tableName = $this->getTableName($params[ParamsSql::TABLE]);
 
+			// Get table meta
+			$pdoParams = $this->getTableMeta($tableName);
+
 			$strFieldNames = '';
 			$strFieldValues = '';
 			foreach ($data as $k => $v)
 			{
+				if (!array_key_exists($k, $pdoParams))
+					continue;
+
 				$strFieldNames .= (empty($strFieldNames) ? '' : ', ') . $k;
 				$strFieldValues .= (empty($strFieldValues) ? '' : ', ') . ':' . $k;
 			}
@@ -400,9 +430,12 @@ class DatabaseDriver extends FTFireTrot
 
 			$sth = $this->m_dbConn->prepare($sqlInsert);
 
-			$pdoParams = $this->getTableMeta($tableName);
 			foreach ($data as $k => $v)
+			{
+				if (!array_key_exists($k, $pdoParams))
+					continue;
 				$sth->bindValue(':' . $k, $v, (isset($pdoParams[$k]['pdoType']) ? $pdoParams[$k]['pdoType'] : NULL));
+			}
 
 			$sth->execute();
 			$sth->closeCursor();
@@ -417,7 +450,7 @@ class DatabaseDriver extends FTFireTrot
 
 				// Remove cache
 				self::clearCache($this->m_cacheDirPath);
-				
+
 				return $res;
 			}
 
@@ -431,6 +464,9 @@ class DatabaseDriver extends FTFireTrot
 			throw $ex;
 		}
 	}
+	/**
+	 * Execute sql UPDATE statement
+	 */
 	public function update($params, $data)
 	{
 		// Syntax SQL: 	
@@ -456,18 +492,29 @@ class DatabaseDriver extends FTFireTrot
 			// Get table name
 			$tableName = $this->getTableName($params[ParamsSql::TABLE]);
 
+			// Get table meta
+			$pdoParams = $this->getTableMeta($tableName);
+
 			// Get field=>value pairs
 			$strNameValuePair = '';
 			foreach ($data as $k => $v)
+			{
+				if (!array_key_exists($k, $pdoParams))
+					continue;
 				$strNameValuePair .= (empty($strNameValuePair) ? '' : ', ') . $k . '=' . ':' . $k;
+			}
 
 			$sqlUpdate = 'UPDATE ' . $tableName . ' SET ' . $strNameValuePair . ' WHERE ' . $params[ParamsSql::RESTRICTION];
 
 			$sth = $this->m_dbConn->prepare($sqlUpdate);
 
-			$pdoParams = $this->getTableMeta($tableName);
+			// Bind values
 			foreach ($data as $k => $v)
+			{
+				if (!array_key_exists($k, $pdoParams))
+					continue;
 				$sth->bindValue(':' . $k, $v, (isset($pdoParams[$k]['pdoType']) ? $pdoParams[$k]['pdoType'] : NULL));
+			}
 
 			$sth->execute();
 			$sth->closeCursor();
@@ -476,7 +523,7 @@ class DatabaseDriver extends FTFireTrot
 			{
 				// Remove cache
 				self::clearCache($this->m_cacheDirPath);
-				
+
 				$sqlSelect = 'SELECT * FROM ' . $tableName . ' WHERE ' . $params[ParamsSql::RESTRICTION];
 				return $this->executeQuery($sqlSelect)->fetchAll(PDO::FETCH_ASSOC);
 			}
@@ -493,39 +540,10 @@ class DatabaseDriver extends FTFireTrot
 		}
 	}
 
-	protected function stripSlashesData($data)
-	{
-		try
-		{
-			$res = array();
-
-			foreach ($data as $row)
-			{
-				$rowTmp = array();
-
-				if (is_array($row))
-					foreach ($row as $k => $v)
-						if (is_string($v))
-							$rowTmp[$k] = stripslashes($v);
-						else
-							$rowTmp[$k] = $v;
-
-				$res[] = $rowTmp;
-			}
-
-			return $res;
-		}
-		catch (Exception $ex)
-		{
-			throw $ex;
-		}
-	}
-
 	/**
 	 * Check cache data
 	 * @param String $cacheFilePath - path to file
 	 * @param String $cacheTtl - time to live (seconds)
-	 * @throws Exception
 	 * @return boolean
 	 */
 	static protected function isCacheValid($cacheFilePath, $cacheTtl)
@@ -551,7 +569,6 @@ class DatabaseDriver extends FTFireTrot
 	/**
 	 * Read data from cache file
 	 * @param String $cacheFilePath - path to file
-	 * @throws Exception
 	 * @return String data or FALSE on failure
 	 */
 	static protected function getCache($cacheFilePath)
@@ -584,7 +601,6 @@ class DatabaseDriver extends FTFireTrot
 	 * Save data to cache file
 	 * @param String $cacheFilePath - path to file
 	 * @param Object $strData - string data to save
-	 * @throws Exception
 	 * @return boolean
 	 */
 	static protected function setCache($cacheFilePath, $oData)
@@ -617,7 +633,6 @@ class DatabaseDriver extends FTFireTrot
 	/**
 	 * Clear all cache files
 	 * @param String $cacheDirPath - directory path
-	 * @throws Exception
 	 */
 	static protected function clearCache($cacheDirPath)
 	{
@@ -635,7 +650,7 @@ class DatabaseDriver extends FTFireTrot
 
 			// Get files
 			$files = glob($dirPath . '*', GLOB_MARK);
-			
+
 			// Remove folders & files
 			foreach ($files as $file)
 				if (is_dir($file))

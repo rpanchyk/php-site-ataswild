@@ -8,7 +8,7 @@ class Guid extends FTFireTrot
 {
 	// http://www.phpclasses.org/package/1738-PHP-Generate-global-unique-identifiers-text-values.html
 
-	protected $valueMD5;
+	private $valueMD5;
 
 	public function __construct()
 	{

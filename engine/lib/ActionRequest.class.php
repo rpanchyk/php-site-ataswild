@@ -20,10 +20,10 @@ class ActionRequest extends FTFireTrot
 			global $engineConfig;
 
 			// Set up database connector
-			$this->db = $request != NULL ? $request->db : new DatabaseDriver($engineConfig['database']['type'], $engineConfig['database']['host'], $engineConfig['database']['port'], $engineConfig['database']['name'], $engineConfig['database']['username'], $engineConfig['database']['password'], array(), $engineConfig['database']['cache_dir'], $engineConfig['database']['cache_ttl_default']);
+			$this->db = $request != NULL ? $request->db : new DatabaseDriver($engineConfig['database']['type'], $engineConfig['database']['host'], $engineConfig['database']['port'], $engineConfig['database']['name'], $engineConfig['database']['username'], $engineConfig['database']['password'], array(), $engineConfig['database']['cache_dir'], $engineConfig['database']['cache_ttl']);
 
 			// Get web data
-			$this->dataWeb = $request != NULL ? $request->dataWeb : WebData::getInstance($engineConfig['web_data']['super_globals'], $this->db);
+			$this->dataWeb = $request != NULL ? $request->dataWeb : WebData::getInstance($engineConfig['web_data']['super_globals'], TRUE);
 
 			// Get mvc data
 			$this->dataMvc = $request != NULL ? $request->dataMvc : MvcData::getInstance(@$this->dataWeb->request['url'], $engineConfig['mvc_data']['lang_default'], 'html', $engineConfig['mvc_data']['app_alias_default'], $engineConfig['mvc_data']['app_operation_default'], $engineConfig['mvc_data']['langs'], $engineConfig['mvc_data']['formatters'], array(), $this->db); //, $engineConfig['mvc_data']['allowed_webaccess_apps']);

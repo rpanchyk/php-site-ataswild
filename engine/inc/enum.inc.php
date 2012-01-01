@@ -5,12 +5,17 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
  * Enumerations
  */
 
-/* class EntityType
- {
- const CLASS_TYPE = 'class';
- const CONFIG_TYPE = 'config';
- const FILE_TYPE = '';
- } */
+/**
+ * File suffix
+ */
+class EntityFileType
+{
+	const EMPTY_TYPE = '';
+	const CONFIG_TYPE = 'config';
+	const CLASS_TYPE = 'class';
+	const INCLUDE_TYPE = 'inc';
+	const INTERFACE_TYPE = 'interface';
+}
 
 /**
  * Used in ActionRequest->params[]
@@ -62,7 +67,10 @@ class ParamsConfig
 
 class ParamsMvc
 {
-	// Mvc params
+	const ENTITY_CONTROLLER = 'controller';
+	const ENTITY_MODEL = 'model';
+	const ENTITY_VIEW = 'view';
+
 	const MVC_MODEL = 'mvc_model';
 	const MVC_VIEW = 'mvc_view';
 

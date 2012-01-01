@@ -15,12 +15,13 @@ try
 	require_once dirname(__FILE__) . '/../../engine/core/include.php';
 	//require_once ADMIN_PATH . '/php/inc/auth.inc.php';
 	require_once ADMIN_PATH . '/php/inc/tree.inc.php';
+	require_once ADMIN_PATH . '/php/inc/langs.inc.php';
 
 	// Prepare dirs
 	FTCore::createDirs(array(UPLOAD_PATH, VAR_PATH, LOGS_PATH, CACHE_PATH, CACHE_QUERY_PATH, CACHE_CONTENT_PATH));
-	
+
 	// Create base controller (just for existance)
-	$base = MvcFactory::create('base', 'controller');
+	$base = MvcFactory::create('base', ParamsMvc::ENTITY_CONTROLLER);
 
 	// Create initial request & response
 	$request = new ActionRequest(NULL);
@@ -30,7 +31,7 @@ try
 	$handlerPath = '/admin/php/handler.php';
 
 	// Check auth
-	$user = MvcFactory::create('user', 'controller');
+	$user = MvcFactory::create('user', ParamsMvc::ENTITY_CONTROLLER);
 	$reqAuth = new ActionRequest($request);
 	$reqAuth->params[Params::OPERATION_NAME] = Params::OPERATION_USER_GET_SESSION;
 	$dataAuth = $user->run($reqAuth, $response);
@@ -38,6 +39,5 @@ try
 }
 catch (Exception $ex)
 {
-	echo '<pre>'; print_r($ex); echo '</pre>';
-	throw $ex;
+	FTException::throwEx($ex);
 }

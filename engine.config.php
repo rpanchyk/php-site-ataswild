@@ -1,13 +1,12 @@
 <?php
-require_once dirname(__FILE__) . '/../inc/cde.inc.php';
+require_once dirname(__FILE__) . '/engine/inc/cde.inc.php';
 
 /**
  * Engine configuration
  */
-
 $engineConfig = array();
 
-$engineConfig['engine']['version'] = '4.0';
+$engineConfig['engine']['version'] = '4.1';
 $engineConfig['engine']['developer'] = 'Ben';
 $engineConfig['engine']['designer'] = 'Geo';
 $engineConfig['engine']['company'] = 'FireTrot';
@@ -26,7 +25,7 @@ $engineConfig['database']['name'] = 'portfolio_ataswild';
 $engineConfig['database']['username'] = 'user';
 $engineConfig['database']['password'] = 'pass';
 $engineConfig['database']['cache_dir'] = CACHE_QUERY_PATH;
-$engineConfig['database']['cache_ttl_default'] = '0'; // seconds
+$engineConfig['database']['cache_ttl'] = '0'; // seconds
 
 $engineConfig['web_data']['super_globals'] = array('_GET', '_POST', '_REQUEST', '_FILES', '_ENV', '_SERVER', '_COOKIE', '_SESSION');
 

@@ -6,5 +6,5 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
  */
 interface IHtmlable
 {
-	 function asHtml();
+	function asHtml();
 }

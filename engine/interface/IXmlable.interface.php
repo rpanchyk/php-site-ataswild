@@ -6,5 +6,5 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
  */
 interface IXmlable
 {
-	public function asXml();
+	function asXml();
 }

@@ -88,7 +88,7 @@ class FTException extends Exception
 			if ($engineConfig['system']['is_debug'])
 			{
 				// Clean output buffer
-				ob_clean();
+				ob_end_clean();
 
 				// Show error
 				die(self::toStringForWeb($exception, $bIsIncludeStackTrace));
@@ -143,10 +143,6 @@ class FTException extends Exception
 		try
 		{
 			self::exceptionHandler($ex, TRUE);
-			// 			$exception = new FTException($ex->getMessage(), $ex->getCode());
-			// 			$exception->file = $ex->getFile();
-			// 			$exception->line = $ex->getLine();
-			// 			self::exceptionHandler($exception, TRUE);
 		}
 		catch (Exception $ex2)
 		{
@@ -170,6 +166,10 @@ class FTException extends Exception
 		}
 		catch (Exception $ex2)
 		{
+			echo '<pre>';
+			print_r($ex2);
+			echo '</pre>';
+
 			throw $ex2;
 		}
 	}
@@ -178,23 +178,29 @@ class FTException extends Exception
 		try
 		{
 			// Check logs dir
-			self::throwOnTrue(!file_exists(self::logDirPath) || !is_dir(self::logDirPath), 'No logs directory: ' . self::logDirPath);
-			self::throwOnTrue(!is_writable(self::logDirPath), 'Logs directory is not writable: ' . self::logDirPath);
+			if (!file_exists(self::logDirPath) || !is_dir(self::logDirPath))
+				die('No logs directory: ' . self::logDirPath);
+			if (!is_writable(self::logDirPath))
+				die('Logs directory is not writable: ' . self::logDirPath);
 
 			// Get log dir name
 			$logDir = FTFileSystem::pathCombine(self::logDirPath, date('Y-m', time()));
 
 			// Check & create if need
-			if (!file_exists($logDir) || !is_dir($logDir))
-				self::throwOnTrue(!mkdir($logDir, 775), 'Caanot create logs directory: ' . $logDir);
-			else
-				self::throwOnTrue(!is_writable($logDir), 'Logs directory is not writable: ' . $logDir);
+			if (!file_exists($logDir) && !is_dir($logDir) && !mkdir($logDir))
+				die('Cannot create logs directory: ' . $logDir);
+			if (!is_writable($logDir))
+				die('Logs directory is not writable: ' . $logDir);
+
+			if (!is_writable($logDir))
+				die('Logs directory is not writable: ' . $logDir);
 
 			// Get log file path
 			$filePath = FTFileSystem::pathCombine($logDir, date('Y-m-d', time()) . '.txt');
 
 			// Check it
-			self::throwOnTrue(file_exists($filePath) && !is_writable($filePath), 'No permissions for log file: ' . $filePath);
+			if (file_exists($filePath) && !is_writable($filePath))
+				die('No permissions for log file: ' . $filePath);
 
 			$CRLF = FTStringUtils::getCrlf();
 
@@ -210,6 +216,10 @@ class FTException extends Exception
 		}
 		catch (Exception $ex2)
 		{
+			echo '<pre>';
+			print_r($ex2);
+			echo '</pre>';
+
 			throw $ex2;
 		}
 	}
