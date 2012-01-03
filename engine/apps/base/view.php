@@ -72,7 +72,10 @@ class BaseView extends FTFireTrot implements IView
 
 			// Replace placeholders
 			foreach ($data as $k => $v)
+			{
+				FTException::throwOnTrue(is_array($v), 'Render text fail for key: ' . $k);
 				$text = str_replace('{' . $k . '}', $v, $text);
+			}
 
 			return $text;
 		}

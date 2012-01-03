@@ -177,9 +177,9 @@ class DatabaseDriver extends FTFireTrot
 			$aTables = $this->getTables($name, TRUE);
 
 			// Check table
-			if ($bIsWithPrefix && FTArrayUtils::inArrayCI('t' . $name, $aTables))
+			if ($bIsWithPrefix && FTArrayUtils::containsValueCI('t' . $name, $aTables))
 				$tableName = 't' . $name;
-			elseif (FTArrayUtils::inArrayCI($name, $aTables))
+			elseif (FTArrayUtils::containsValueCI($name, $aTables))
 				$tableName = $name;
 			else
 				throw new Exception('Table not found: ' . $name);

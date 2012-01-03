@@ -22,7 +22,7 @@ try
 	// Run handler
 	$handler = MvcFactory::create('handler', ParamsMvc::ENTITY_CONTROLLER);
 	$reqHandler = new ActionRequest($request);
-	$handler->run($reqAuth, $response);
+	$handler->run($reqHandler, $response);
 
 	// Send buffer and turn off output buffering
 	@ob_end_flush();

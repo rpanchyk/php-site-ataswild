@@ -22,8 +22,9 @@ FTCore::loadInterface(INTERFACE_PATH, 'IController');
 FTCore::loadInterface(INTERFACE_PATH, 'IModel');
 FTCore::loadInterface(INTERFACE_PATH, 'IView');
 FTCore::loadInterface(INTERFACE_PATH, 'IArrayable');
-FTCore::loadInterface(INTERFACE_PATH, 'IXmlable');
 FTCore::loadInterface(INTERFACE_PATH, 'IHtmlable');
+FTCore::loadInterface(INTERFACE_PATH, 'IJsonable');
+FTCore::loadInterface(INTERFACE_PATH, 'IXmlable');
 
 // System library classes
 FTCore::loadClass(SLIB_PATH, 'FTStringUtils');

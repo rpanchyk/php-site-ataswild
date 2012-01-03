@@ -111,14 +111,14 @@ class BaseModel extends FTFireTrot implements IModel
 
 			// Get config for app
 			$config = require $filePath;
-			if (!FTArrayUtils::checkData($config))
+			if (!FTArrayUtils::checkData($config, 0))
 				throw new Exception('No app config');
 
 			// Get editor id
 			$editorID = isset($request->params[ParamsConfig::EDITOR_ID]) ? $request->params[ParamsConfig::EDITOR_ID] : ParamsConfig::EDITOR_DEFAULT;
 
 			// Get editor data
-			if (in_array($appName, array('base')))
+			if (in_array($appName, array('base', 'handler')))
 				$skip_editor = TRUE;
 			elseif (FTArrayUtils::checkData(@$config['editor'][$editorID]))
 				$configEditor = $config['editor'][$editorID];
@@ -133,7 +133,7 @@ class BaseModel extends FTFireTrot implements IModel
 			FTException::throwOnTrue(!FTArrayUtils::checkData(@$configEditor['fields']) && !@$skip_editor, 'No editor fields: ' . $appName . '.' . $editorID);
 
 			// Replace editor (!)
-			$config['editor'][$editorID] = $configEditor;
+			$config['editor'][$editorID] = @$configEditor;
 
 			if (@$request->params['skip_table_metadata'])
 				return $config;

@@ -84,6 +84,7 @@ class ParamsMvc
 	const DEFAULT_VIEW_NAME = 'base';
 
 	const IS_NOT_RENDER = 'is_not_render';
+	const IS_NOT_EXECUTE = 'is_not_execute';
 	const MODEL_RESULT_DATA = 'model_result_data';
 	const APP_NAME = 'app_name';
 }

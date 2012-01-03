@@ -13,7 +13,7 @@ class BaseController extends FTFireTrot implements IController
 	public $config;
 
 	private $m_entityName;
-	private $m_data; // result data from model-execute()
+	protected $m_data; // result data from model-execute()
 
 	public function __construct($args = NULL)
 	{
@@ -58,6 +58,23 @@ class BaseController extends FTFireTrot implements IController
 				$reqConfig = new ActionRequest($request);
 				$reqConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
 				$this->config = $this->model->execute($reqConfig, $response, $this);
+			}
+
+			if (!is_null($this->model) && !@$request->params[ParamsMvc::IS_NOT_EXECUTE])
+			{
+				// Get data
+				$req = new ActionRequest($request);
+				$req->params[Params::OPERATION_NAME] = isset($request->params[Params::OPERATION_NAME]) ? $request->params[Params::OPERATION_NAME] : Params::OPERATION_GET;
+				$this->m_data = $this->model->execute($req, $response, $this);
+
+				// Render content to concrete data type
+				if (!@$request->params[ParamsMvc::IS_NOT_RENDER])
+				{
+					$methodName = 'as' . ucfirst($request->dataMvc->getFormatter());
+					FTException::throwOnTrue(!is_callable(array($this, $methodName)), 'Not implemented method: ' . $methodName);
+
+					$this->m_data = $this->$methodName();
+				}
 			}
 
 			return $this->m_data;

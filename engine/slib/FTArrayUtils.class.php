@@ -11,14 +11,31 @@ class FTArrayUtils extends FTFireTrot
 	 * @param String $needle - string to find
 	 * @param Array $haystack - input array
 	 * @return Boolean
+	 * @link http://www.php.net/manual/ru/function.in-array.php#89256
 	 */
-	static function inArrayCI($needle, $haystack)
+	static public function containsValueCI($needle, $haystack)
 	{
-		// http://www.php.net/manual/ru/function.in-array.php#89256
-
 		try
 		{
 			return in_array(strtolower($needle), array_map('strtolower', $haystack));
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+
+	/**
+	 * Case-intensitive array_key_exists
+	 * @param String $needle - string to find
+	 * @param Array $haystack - input array
+	 * @return Boolean
+	 */
+	static public function containsKeyCI($needle, $haystack)
+	{
+		try
+		{
+			return array_key_exists(strtolower($needle), $haystack);
 		}
 		catch (Exception $ex)
 		{
@@ -32,7 +49,7 @@ class FTArrayUtils extends FTFireTrot
 	 * @param int $nMinCount - minimal count value
 	 * @return Boolean
 	 */
-	static function checkData($data, $nMinCount = 1)
+	static public function checkData($data, $nMinCount = 1)
 	{
 		try
 		{

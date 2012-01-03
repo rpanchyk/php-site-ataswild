@@ -12,22 +12,7 @@ class ContainerController extends BaseController implements IHtmlable
 		{
 			parent::run($request, $response);
 
-			// Get data
-			$req = new ActionRequest($request);
-			$req->params[Params::OPERATION_NAME] = isset($request->params[Params::OPERATION_NAME]) ? $request->params[Params::OPERATION_NAME] : Params::OPERATION_GET;
-			$this->data = $this->model->execute($req, $response, $this);
-
-			// Render content to concrete data type
-			if (!@$request->params[ParamsMvc::IS_NOT_RENDER])
-			{
-				$methodName = 'as' . ucfirst($request->dataMvc->getFormatter());
-				if (!is_callable(array($this, $methodName)))
-					throw new Exception('Not implemented method: ' . $methodName);
-
-				return $this->$methodName();
-			}
-
-			return $this->data;
+			return $this->m_data;
 		}
 		catch (Exception $ex)
 		{
@@ -40,11 +25,11 @@ class ContainerController extends BaseController implements IHtmlable
 		try
 		{
 			// Check data
-			FTException::throwOnTrue(!FTArrayUtils::checkData($this->data, 0), 'No controller data in ' . get_class($this));
+			FTException::throwOnTrue(!FTArrayUtils::checkData($this->m_data, 0), 'No controller data in ' . get_class($this));
 
 			$strResult = '';
 
-			foreach ($this->data as $row)
+			foreach ($this->m_data as $row)
 			{
 
 				if (!isset($row['markup']) || !FTArrayUtils::checkData(@$row[ParamsMvc::MODEL_RESULT_DATA]))
