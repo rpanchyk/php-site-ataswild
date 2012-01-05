@@ -49,7 +49,7 @@ class MvcFactory
 				$oInstance = new $strClassName($args);
 
 			// Get controller config
-			if ($strInstatnce === ParamsMvc::ENTITY_CONTROLLER && !FTArrayUtils::checkData(@$oInstance->config))
+			if ($strInstatnce === ParamsMvc::ENTITY_CONTROLLER && !@isset($oInstance->config))
 			{
 				$oInstance->config = array();
 
