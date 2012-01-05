@@ -9,7 +9,6 @@ class FTTimeProfiler extends FTFireTrot
 	const defaultPrecision = 3;
 
 	private $m_timeStart;
-	private $m_timeEnd;
 
 	public function __construct($bIsStart = FALSE)
 	{
@@ -21,19 +20,11 @@ class FTTimeProfiler extends FTFireTrot
 	{
 		$this->m_timeStart = microtime(TRUE);
 	}
-	public function finish()
-	{
-		$this->m_timeEnd = microtime(TRUE);
-	}
 
 	public function getElapsedTime($nPrecision = self::defaultPrecision)
 	{
-		if (is_null($this->m_timeEnd))
-			$this->finish();
-
-		return round(($this->m_timeEnd - $this->m_timeStart), $nPrecision);
+		return round((microtime(TRUE) - $this->m_timeStart), $nPrecision);
 	}
-
 	public function getElapsedTimeAsString($nPrecision = self::defaultPrecision)
 	{
 		return '<b>Time elapsed:</b> ' . $this->getElapsedTime($nPrecision) . ' seconds';
