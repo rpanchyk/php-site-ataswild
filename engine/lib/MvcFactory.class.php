@@ -2,7 +2,7 @@
 require_once dirname(__FILE__) . '/../inc/cde.inc.php';
 
 /**
- * Mvc factory
+ * Mvc factory class - creates an instance of given type
  */
 class MvcFactory
 {
@@ -15,10 +15,18 @@ class MvcFactory
 	{
 	}
 
+	/**
+	 * Creates an instance of given type
+	 * @param String $strAppName - application name
+	 * @param String $strInstatnce - instance type
+	 * @param Array $args - arguments for instance constructor
+	 * @param Boolean $bIsSingleton - create instance as singleton (default: TRUE)
+	 */
 	static public function create($strAppName, $strInstatnce, $args = NULL, $bIsSingleton = TRUE)
 	{
 		try
 		{
+			// Result instance
 			$oInstance = NULL;
 
 			if (is_null($strAppName))
@@ -51,14 +59,11 @@ class MvcFactory
 			// Get controller config
 			if ($strInstatnce === ParamsMvc::ENTITY_CONTROLLER && !@isset($oInstance->config))
 			{
-				$oInstance->config = array();
-
 				$pathConfig = FTFileSystem::pathCombine(APP_PATH, $strAppName, 'app.' . EntityFileType::CONFIG_TYPE . '.php');
 				if (file_exists($pathConfig))
 				{
 					// All vars in config
 					global $request;
-
 					$oInstance->config = require_once $pathConfig;
 				}
 			}
@@ -71,6 +76,10 @@ class MvcFactory
 		}
 	}
 
+	/**
+	 * Destroy singleton instance
+	 * @param String $strClassName - class name
+	 */
 	static public function destroy($strClassName)
 	{
 		try
