@@ -27,7 +27,6 @@ class BaseController extends FTFireTrot implements IController
 
 			// Init vars
 			$this->m_data = array();
-			$this->config = array();
 			$this->m_entityName = FTStringUtils::trimEnd(get_class($this), ucfirst(ParamsMvc::ENTITY_CONTROLLER));
 
 			// Set model
@@ -53,7 +52,7 @@ class BaseController extends FTFireTrot implements IController
 				$this->view = new $$request->params[ParamsMvc::MVC_VIEW];
 
 			// Get config
-			if (isset($this->model) && !FTArrayUtils::checkData($this->config))
+			if (isset($this->model) && !@isset($this->config))
 			{
 				$reqConfig = new ActionRequest($request);
 				$reqConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
