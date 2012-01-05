@@ -19,19 +19,22 @@ try
 	// Include all files need
 	require_once dirname(__FILE__) . '/include.php';
 
-	// Create front controller & run application!
-	$front = MvcFactory::create('front', ParamsMvc::ENTITY_CONTROLLER);
-	$front->run($request, $response);
-
-	// Show debug info
-	if ($engineConfig['system']['is_debug'])
+	if (!FTStringUtils::startsWith($_SERVER['REQUEST_URI'], '/admin/'))
 	{
-		$base->timeProfiler->showElapsedTimeStyled();
-		$request->dataMvc->showResult();
-	}
+		// Create front controller & run application!
+		$front = MvcFactory::create('front', ParamsMvc::ENTITY_CONTROLLER);
+		$front->run($request, $response);
 
-	// Send buffer and turn off output buffering
-	@ob_end_flush();
+		// Show debug info
+		if ($engineConfig['system']['is_debug'])
+		{
+			$base->timeProfiler->showElapsedTimeStyled();
+			$request->dataMvc->showResult();
+		}
+
+		// Send buffer and turn off output buffering
+		@ob_end_flush();
+	}
 }
 catch (Exception $ex)
 {

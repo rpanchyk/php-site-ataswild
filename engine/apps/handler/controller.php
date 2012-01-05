@@ -17,9 +17,9 @@ class HandlerController extends BaseController implements IHtmlable, IJsonable
 			$reqBase->params[ParamsMvc::IS_NOT_EXECUTE] = TRUE; // Suspend execute default operation
 			parent::run($reqBase, $response);
 
-			// Get object alias
-			$objectAlias = @$request->dataWeb->request['object_alias'];
-			FTException::throwOnTrue(empty($objectAlias), 'No object alias');
+			// Get application
+			$objectApp = @$request->dataWeb->request['object_app'];
+			FTException::throwOnTrue(empty($objectApp), 'No app');
 
 			// Get object operation
 			$objectOperation = @$request->dataWeb->request['object_operation'];
@@ -28,7 +28,7 @@ class HandlerController extends BaseController implements IHtmlable, IJsonable
 			// Execute
 			$req = new ActionRequest($request);
 			$req->params = array_merge(is_array(@$req->params) ? $req->params : array(), $request->dataWeb->request);
-			$req->params[Params::OPERATION_NAME] = strtolower($objectAlias) . '_' . strtolower($objectOperation);
+			$req->params[Params::OPERATION_NAME] = strtolower($objectApp) . '_' . strtolower($objectOperation);
 			$this->m_data = $this->model->execute($req, $response, $this);
 
 			// Check error
@@ -43,7 +43,12 @@ class HandlerController extends BaseController implements IHtmlable, IJsonable
 		catch (Exception $ex)
 		{
 			if (!@$request->params[ParamsMvc::IS_NOT_RENDER])
-				echo $this->getErrorEdge() . $ex->getMessage() . $this->getErrorEdge();
+			{
+				global $engineConfig;
+
+				// Show error
+				echo $this->m_errorEdge . FTException::toStringForWeb($ex, $engineConfig['system']['is_debug']) . $this->m_errorEdge;
+			}
 			else
 				throw $ex;
 		}

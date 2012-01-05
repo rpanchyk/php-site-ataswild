@@ -43,7 +43,11 @@ class HandlerModel extends BaseModel
 		}
 	}
 
-	protected function opHandlerTree(ActionRequest & $request, ActionResponse & $response)
+	/**
+	 * Get admin tree menu
+	 * @return String - html markup
+	 */
+	protected function opHandlerGetTree(ActionRequest & $request, ActionResponse & $response)
 	{
 		try
 		{
@@ -119,7 +123,7 @@ class HandlerModel extends BaseModel
 		$strTree .= '<ul id="settings" class="filetree" style="font-family:Arial; font-size:13px;">';
 		$strTree .= '<li class="collapsable"><div class="hitarea collapsable-hitarea"></div><span class="folder"><a class="treelink">Настройки</a></span>';
 		$strTree .= '<ul>';
-		$strTree .= '<span class="file"><a class="treelink" onclick="doajaxContent(\'settings=user\', this)">Пользователи</a></span>';
+		$strTree .= '<span class="file"><a class="treelink" onclick="doajaxContent(\'object_app=settings&object_operation=get_user\', this)">Пользователи</a></span>';
 		$strTree .= '</ul>';
 		$strTree .= '</li>';
 		$strTree .= '</ul>';
@@ -147,12 +151,14 @@ class HandlerModel extends BaseModel
 				//$strTree .= ($bHasChilds ? '<li class="collapsable"><div class="hitarea collapsable-hitarea"></div>' : '<li>');
 				$strTree .= '<span class="' . ($bHasChilds ? 'folder' : 'file') . '">';
 				$strTree .= '<a class="treelink" onclick="doajaxContent(\'';
-				$strTree .= 'app=' . $row['app'];
+				$strTree .= 'object_app=' . $row['app'];
+				$strTree .= '&object_alias=' . $row['alias'];
+				$strTree .= '&object_operation=get';
 
-				if (isset($row['_parent_id']))
-					$strTree .= '&_parent_id=' . $row['_parent_id'];
-				else
-					$strTree .= '&alias=' . $row['alias'];
+//				if (isset($row['_parent_id']))
+//					$strTree .= '&_parent_id=' . $row['_parent_id'];
+//				else
+//					$strTree .= '&alias=' . $row['alias'];
 
 				//if (!$bHasChilds)
 				//	$strTree .= '&lang=' . (!(@empty($request->dataWeb->cookie[$engineConfig['cookie']['name_lang']])) ? $request->dataWeb->cookie[$engineConfig['cookie']['name_lang']] : $engineConfig['mvc_data']['lang_default']);

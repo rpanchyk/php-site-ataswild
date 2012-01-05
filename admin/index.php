@@ -1,5 +1,18 @@
 <?php
-require_once dirname(__FILE__) . '/php/main.php';
+require_once dirname(__FILE__) . '/../engine/core/main.php';
+
+// Create handler
+$handler = MvcFactory::create('handler', ParamsMvc::ENTITY_CONTROLLER);
+$handlerPath = $handler->config['web_path'];
+
+// Check auth
+$user = MvcFactory::create('user', ParamsMvc::ENTITY_CONTROLLER);
+$reqAuth = new ActionRequest($request);
+$reqAuth->params[Params::OPERATION_NAME] = Params::OPERATION_USER_GET_SESSION;
+$dataAuth = $user->run($reqAuth, $response);
+
+// Send buffer and turn off output buffering
+@ob_end_flush();
 ?>
 <html>
 <head>
@@ -81,7 +94,7 @@ function doajaxContent(params, element)
 function doajaxTree()
 {
 	$.ajax({
-		url: '<?php echo $handlerPath; ?>'+'?'+'tree=1',
+		url: '<?php echo $handlerPath; ?>'+'?object_app=handler&object_operation=get_tree',
 		beforeSend: function(){
 			$('#cnt').html('');
 			showLoading('cptree');
@@ -127,12 +140,10 @@ function formLoginSubmit()
 		data: unparam($.param( $('form input,textarea,select') )),
 		success: function(data) {
 			if (data.indexOf('<!-- error -->') != -1)
-			{
-				$('#form_login_result').html(data);
-			}
+				$('#login_result').html(data);
 			else
 			{
-				$('#form_login_result').html('Login OK. Redirecting...');
+				$('#login_result').html('Login OK. Redirecting...');
 				$(location).attr('href','/admin/');
 			}
 		},
@@ -140,6 +151,23 @@ function formLoginSubmit()
 			alert(textStatus + ': ' + errorThrown);
 		}
 	});
+}
+function doLogout()
+{
+	$.ajax({
+		url: '<?php echo $handlerPath; ?>'+'?object_app=user&object_operation=logout',
+		success: function(data) {
+			if (data.indexOf('<!-- error -->') != -1)
+				$('#cnt').html(data);
+			else
+				$(location).attr('href','/admin/');
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			alert(textStatus + ': ' + errorThrown);
+		}
+	});
+
+	return false;
 }
 
 function showLoading(element_id)
@@ -302,12 +330,14 @@ input.ft_control:focus, textarea.ft_control:focus {
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type="submit" name="do_login" class="ft_control" value="Войти" /></td>
+				<td><input type="submit" class="ft_control" value="Войти" /></td>
 			</tr>
 		</table>
+		<input type="hidden" name="object_app" value="user" />
+		<input type="hidden" name="object_operation" value="login" />
 	</form>
 	</div>
-	<div id="form_login_result" style="padding:10px;">&nbsp;</div>
+	<div id="login_result" style="padding:10px;">&nbsp;</div>
 </div>
 <?php
 }
@@ -316,8 +346,8 @@ else
 ?>
 	<div id="container">
 		<div class="ui-layout-north">
-			<a>Здравствуйте, <?php echo @$authUser['name']; ?>!</a> [<a href="/admin/php/handler.php?do_logout=1">Выход</a>]
-			<div style="float:right;"><?php showLangs(); ?></div>
+			<a>Здравствуйте, <?php echo @$dataAuth[0]['name']; ?>!</a> [<a href="#" onclick="doLogout();" style="text-decoration:none;">Выход</a>]
+			<div style="float:right;"><?php //showLangs(); ?></div>
 		</div>
 		<div class="ui-layout-west" id="cptree"></div>
 		<div class="ui-layout-center"><div id="cnt"></div></div>

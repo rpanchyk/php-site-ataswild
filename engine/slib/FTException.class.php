@@ -32,7 +32,7 @@ class FTException extends Exception
 		}
 	}
 
-	static protected function toStringForWeb(Exception $exception, $bIsIncludeStackTrace = TRUE)
+	static public function toStringForWeb(Exception $exception, $bIsIncludeStackTrace = TRUE)
 	{
 		// http://php.net/manual/ru/language.exceptions.extending.php
 

@@ -19,8 +19,10 @@ class MvcFactory
 	{
 		try
 		{
+			$oInstance = NULL;
+
 			if (is_null($strAppName))
-				return NULL;
+				return $oInstance;
 
 			// Define path to file
 			$path = FTFileSystem::pathCombine(APP_PATH, $strAppName, $strInstatnce . '.php');
@@ -41,12 +43,27 @@ class MvcFactory
 				if (!isset(self::$aInstances[$strClassName]) || self::$aInstances[$strClassName] == NULL)
 					self::$aInstances[$strClassName] = new $strClassName($args);
 
-				return self::$aInstances[$strClassName];
+				$oInstance = self::$aInstances[$strClassName];
 			}
 			else
+				$oInstance = new $strClassName($args);
+
+			// Get controller config
+			if ($strInstatnce == ParamsMvc::ENTITY_CONTROLLER)
 			{
-				return new $strClassName($args);
+				$oInstance->config = array();
+
+				$pathConfig = FTFileSystem::pathCombine(APP_PATH, $strAppName, 'app.' . EntityFileType::CONFIG_TYPE . '.php');
+				if (file_exists($pathConfig))
+				{
+					// All vars in config
+					global $request;
+
+					$oInstance->config = require_once $pathConfig;
+				}
 			}
+
+			return $oInstance;
 		}
 		catch (Exception $ex)
 		{
