@@ -13,27 +13,52 @@ class BaseController extends FTFireTrot implements IController
 	public $config;
 
 	private $m_entityName;
-	protected $m_data; // result data from model-execute()
 
+	/**
+	 * Result data from model-execute()
+	 * @var Object
+	 */
+	protected $m_data;
+
+	/**
+	 * Constructor for base controller
+	 * @param Array $args - input params (default: NULL)
+	 */
 	public function __construct($args = NULL)
 	{
 		try
 		{
-			global $engineConfig;
+			global $request, $response, $engineConfig;
 
-			// Init time profiler and start it
-			if (isset($engineConfig['system']['is_debug']) && $engineConfig['system']['is_debug'] === TRUE)
+			// Init and start time profiler
+			if ($engineConfig['system']['is_debug'] === TRUE)
 				$this->timeProfiler = new FTTimeProfiler(TRUE);
 
 			// Init vars
 			$this->m_data = array();
 			$this->m_entityName = FTStringUtils::trimEnd(get_class($this), ucfirst(ParamsMvc::ENTITY_CONTROLLER));
 
-			// Set model
+			// Set model & view
 			$this->model = $this->getModel($args);
-
-			// Set view
 			$this->view = $this->getView($args);
+
+			// Get config
+			if (!isset($this->config))
+			{
+				if (!is_null($this->model))
+				{
+					$reqConfig = new ActionRequest($request);
+					$reqConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
+					$reqConfig->params[ParamsMvc::APP_NAME] = $this->m_entityName;
+					$this->config = $this->model->execute($reqConfig, $response, $this);
+				}
+				else
+				{
+					$pathConfig = FTFileSystem::pathCombine(APP_PATH, $this->m_entityName, 'app.' . EntityFileType::CONFIG_TYPE . '.php');
+					if (file_exists($pathConfig))
+						$this->config = require $pathConfig;
+				}
+			}
 		}
 		catch (Exception $ex)
 		{
@@ -51,29 +76,12 @@ class BaseController extends FTFireTrot implements IController
 			if (isset($request->params[ParamsMvc::MVC_VIEW]))
 				$this->view = new $$request->params[ParamsMvc::MVC_VIEW];
 
-			// Get config
-			if (isset($this->model) && !@isset($this->config))
-			{
-				$reqConfig = new ActionRequest($request);
-				$reqConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
-				$this->config = $this->model->execute($reqConfig, $response, $this);
-			}
-
+			// Execute model (!)
 			if (!is_null($this->model) && !@$request->params[ParamsMvc::IS_NOT_EXECUTE])
 			{
-				// Get data
 				$req = new ActionRequest($request);
 				$req->params[Params::OPERATION_NAME] = isset($request->params[Params::OPERATION_NAME]) ? $request->params[Params::OPERATION_NAME] : Params::OPERATION_GET;
 				$this->m_data = $this->model->execute($req, $response, $this);
-
-				// Render content to concrete data type
-				if (!@$request->params[ParamsMvc::IS_NOT_RENDER])
-				{
-					$methodName = 'as' . ucfirst($request->dataMvc->getFormatter());
-					FTException::throwOnTrue(!is_callable(array($this, $methodName)), 'Not implemented method: ' . $methodName);
-
-					$this->m_data = $this->$methodName();
-				}
 			}
 
 			return $this->m_data;
@@ -84,55 +92,60 @@ class BaseController extends FTFireTrot implements IController
 		}
 	}
 
+	/**
+	 * Creates model
+	 * @param Array $args
+	 */
 	private function getModel($args)
 	{
 		try
 		{
-			$modelName = $this->m_entityName;
+			// No model
+			if (@$args[ParamsMvc::NO_MODEL])
+				return NULL;
 
+			// Custom model
 			if (isset($args[ParamsMvc::CUSTOM_MODEL]))
+				$name = $args[ParamsMvc::CUSTOM_MODEL];
+
+			// Check model for this controller & if no - set default one
+			if (!isset($name))
 			{
-				// Custom model
-				$modelName = $args[ParamsMvc::CUSTOM_MODEL];
-			}
-			elseif (isset($args[ParamsMvc::NO_MODEL]) && $args[ParamsMvc::NO_MODEL])
-			{
-				// No model
-				$modelName = NULL;
+				$path = FTFileSystem::pathCombine(APP_PATH, $this->m_entityName, ParamsMvc::ENTITY_MODEL . '.php');
+				$name = file_exists($path) ? $this->m_entityName : ParamsMvc::DEFAULT_MODEL_NAME;
 			}
 
-			return MvcFactory::create($modelName, ParamsMvc::ENTITY_MODEL);
+			return MvcFactory::create($name, ParamsMvc::ENTITY_MODEL);
 		}
 		catch (Exception $ex)
 		{
 			throw $ex;
 		}
 	}
+	/**
+	 * Creates view
+	 * @param Array $args
+	 */
 	private function getView($args)
 	{
 		try
 		{
-			$viewName = $this->m_entityName;
+			// No view
+			if (@$args[ParamsMvc::NO_VIEW])
+				return NULL;
 
+			// Custom view
 			if (isset($args[ParamsMvc::CUSTOM_VIEW]))
+				$name = $args[ParamsMvc::CUSTOM_VIEW];
+
+			// Check view for this controller & if no - set default one
+			if (!isset($name))
 			{
-				// Custom view
-				$viewName = $args[ParamsMvc::CUSTOM_VIEW];
-			}
-			elseif (isset($args[ParamsMvc::NO_VIEW]) && $args[ParamsMvc::NO_VIEW])
-			{
-				// No view
-				$viewName = NULL;
-			}
-			else
-			{
-				// Check view for this controller & if no - set default name
-				$path = FTFileSystem::pathCombine(APP_PATH, $viewName, ParamsMvc::ENTITY_VIEW . '.php');
-				if (!file_exists($path))
-					$viewName = ParamsMvc::DEFAULT_VIEW_NAME;
+				$path = FTFileSystem::pathCombine(APP_PATH, $this->m_entityName, ParamsMvc::ENTITY_VIEW . '.php');
+				$name = file_exists($path) ? $this->m_entityName : ParamsMvc::DEFAULT_VIEW_NAME;
 			}
 
-			return MvcFactory::create($viewName, ParamsMvc::ENTITY_VIEW);
+			return MvcFactory::create($name, ParamsMvc::ENTITY_VIEW);
 		}
 		catch (Exception $ex)
 		{

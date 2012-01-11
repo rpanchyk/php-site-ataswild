@@ -4,8 +4,9 @@ require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 /**
  * Static controller
  */
-class StaticController extends BaseController implements IHtmlable
+class StaticController extends BaseController //implements IHtmlable
 {
+	/*
 	public function run(ActionRequest & $request, ActionResponse & $response)
 	{
 		try
@@ -38,4 +39,5 @@ class StaticController extends BaseController implements IHtmlable
 			throw $ex;
 		}
 	}
+	*/
 }

@@ -49,9 +49,9 @@ FTCore::loadConfig(ROOT_PATH, 'engine');
 // Prepare engine before start
 FTCore::loadInclude(INC_PATH, 'prepare');
 
-// Create base controller (just for existance)
-$base = MvcFactory::create('base', ParamsMvc::ENTITY_CONTROLLER);
-
 // Create initial request & response
 $request = new ActionRequest(NULL);
 $response = new ActionResponse();
+
+// Create base controller (just for existance)
+$base = MvcFactory::create('base', ParamsMvc::ENTITY_CONTROLLER);

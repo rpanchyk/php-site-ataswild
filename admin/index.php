@@ -139,13 +139,9 @@ function formLoginSubmit()
 		url: '<?php echo $handlerPath; ?>',
 		data: unparam($.param( $('form input,textarea,select') )),
 		success: function(data) {
-			if (data.indexOf('<!-- error -->') != -1)
-				$('#login_result').html(data);
-			else
-			{
-				$('#login_result').html('Login OK. Redirecting...');
+			$('#login_result').html(data);
+			if (data.indexOf('<!-- error -->') == -1)
 				$(location).attr('href','/admin/');
-			}
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			alert(textStatus + ': ' + errorThrown);

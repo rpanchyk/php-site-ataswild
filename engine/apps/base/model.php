@@ -107,7 +107,8 @@ class BaseModel extends FTFireTrot implements IModel
 			// Check file
 			$filePath = FTFileSystem::pathCombine(APP_PATH, $appName, 'app.config.php');
 			if (!file_exists($filePath))
-				throw new Exception('No file: ' . $filePath);
+				//throw new Exception('No file: ' . $filePath);
+				return array();
 
 			// Get config for app
 			$config = require $filePath;
@@ -118,7 +119,7 @@ class BaseModel extends FTFireTrot implements IModel
 			$editorID = isset($request->params[ParamsConfig::EDITOR_ID]) ? $request->params[ParamsConfig::EDITOR_ID] : ParamsConfig::EDITOR_DEFAULT;
 
 			// Get editor data
-			if (in_array($appName, array('base', 'handler')))
+			if (in_array($appName, array('base', 'front', 'handler')))
 				$skip_editor = TRUE;
 			elseif (FTArrayUtils::checkData(@$config['editor'][$editorID]))
 				$configEditor = $config['editor'][$editorID];
@@ -127,7 +128,8 @@ class BaseModel extends FTFireTrot implements IModel
 			elseif (isset($request->params[ParamsConfig::DATA_OBJECT]))
 				$configEditor = @$config[$request->params[ParamsConfig::DATA_OBJECT]]['editor'][$editorID];
 			else
-				throw new Exception('No editor found');
+				throw new Exception('No editor found for app: ' . $appName);
+				//return $config;
 
 			// Check edtor fields
 			FTException::throwOnTrue(!FTArrayUtils::checkData(@$configEditor['fields']) && !@$skip_editor, 'No editor fields: ' . $appName . '.' . $editorID);
@@ -135,7 +137,7 @@ class BaseModel extends FTFireTrot implements IModel
 			// Replace editor (!)
 			$config['editor'][$editorID] = @$configEditor;
 
-			if (@$request->params['skip_table_metadata'])
+			if (@$request->params['skip_table_metadata'] || @$skip_editor)
 				return $config;
 
 			// Get table metadata

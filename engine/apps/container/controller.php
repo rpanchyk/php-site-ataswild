@@ -4,14 +4,15 @@ require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 /**
  * Controller for including other content
  */
-class ContainerController extends BaseController implements IHtmlable
+class ContainerController extends BaseController //implements IHtmlable
 {
+	/*
 	public function run(ActionRequest & $request, ActionResponse & $response)
 	{
 		try
 		{
 			parent::run($request, $response);
-
+//echo '<pre>'; print_r($this->m_data); echo '</pre>';
 			return $this->m_data;
 		}
 		catch (Exception $ex)
@@ -19,7 +20,8 @@ class ContainerController extends BaseController implements IHtmlable
 			throw $ex;
 		}
 	}
-
+*/
+	/*
 	public function asHtml()
 	{
 		try
@@ -49,4 +51,5 @@ class ContainerController extends BaseController implements IHtmlable
 			throw $ex;
 		}
 	}
+	*/
 }

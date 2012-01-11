@@ -4,7 +4,7 @@ require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 /**
  * Front controller - redirect requests to other controllers
  */
-class FrontController extends BaseController
+class FrontController extends BaseController //implements IHtmlable, IXmlable
 {
 	public function __construct($args = NULL)
 	{
@@ -42,6 +42,8 @@ class FrontController extends BaseController
 					throw new Exception('Unhandled formatter');
 					break;
 			}
+
+			return $this->m_data;
 		}
 		catch (Exception $ex)
 		{
@@ -53,14 +55,14 @@ class FrontController extends BaseController
 	{
 		try
 		{
-			$controller = MvcFactory::create('container', ParamsMvc::ENTITY_CONTROLLER);
+			$ctrl = MvcFactory::create('container', ParamsMvc::ENTITY_CONTROLLER);
 
 			$req = new ActionRequest($request);
 			$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 			$req->params[Params::ALIAS] = $request->dataMvc->getController();
-			$strOutput = $controller->run($req, $response);
+			$data = $ctrl->run($req, $response);
 
-			$this->view->render('index', array('content' => $strOutput));
+			$ctrl->view->render('index', array('content' => $data), TRUE);
 		}
 		catch (Exception $ex)
 		{

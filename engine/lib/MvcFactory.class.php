@@ -6,6 +6,10 @@ require_once dirname(__FILE__) . '/../inc/cde.inc.php';
  */
 class MvcFactory
 {
+	/**
+	 * Holds intances collection
+	 * @var Array
+	 */
 	static private $aInstances = array();
 
 	private function __construct()
@@ -26,49 +30,23 @@ class MvcFactory
 	{
 		try
 		{
-			// Result instance
-			$oInstance = NULL;
-
-			if (is_null($strAppName))
-				return $oInstance;
-
-			// Define path to file
-			$path = FTFileSystem::pathCombine(APP_PATH, $strAppName, $strInstatnce . '.php');
-			if (!file_exists($path))
-				throw new Exception('File not found: ' . $path);
+			FTException::throwOnTrue(is_null($strAppName), 'No app name');
 
 			// Load file
-			require_once $path;
+			FTCore::loadFile(FTFileSystem::pathCombine(APP_PATH, $strAppName), $strInstatnce);
 
 			// Define class name
 			$strClassName = ucfirst($strAppName) . ucfirst($strInstatnce);
-			if (!class_exists($strClassName))
-				throw new Exception('Class not found: ' . $strClassName);
+			FTException::throwOnTrue(!class_exists($strClassName), 'Class not found: ' . $strClassName);
 
-			// Create instance
-			if ($bIsSingleton)
-			{
-				if (!isset(self::$aInstances[$strClassName]) || self::$aInstances[$strClassName] == NULL)
-					self::$aInstances[$strClassName] = new $strClassName($args);
+			// Create instance as prototype
+			if (!$bIsSingleton)
+				return new $strClassName($args);
 
-				$oInstance = self::$aInstances[$strClassName];
-			}
-			else
-				$oInstance = new $strClassName($args);
-
-			// Get controller config
-			if ($strInstatnce === ParamsMvc::ENTITY_CONTROLLER && !@isset($oInstance->config))
-			{
-				$pathConfig = FTFileSystem::pathCombine(APP_PATH, $strAppName, 'app.' . EntityFileType::CONFIG_TYPE . '.php');
-				if (file_exists($pathConfig))
-				{
-					// All vars in config
-					global $request;
-					$oInstance->config = require_once $pathConfig;
-				}
-			}
-
-			return $oInstance;
+			// Create instance as singleton
+			if (!isset(self::$aInstances[$strClassName]))
+				self::$aInstances[$strClassName] = new $strClassName($args);
+			return self::$aInstances[$strClassName];
 		}
 		catch (Exception $ex)
 		{
@@ -85,7 +63,7 @@ class MvcFactory
 		try
 		{
 			if (isset(self::$aInstances[$strClassName]) && self::$aInstances[$strClassName] != NULL)
-				return (self::$instance = NULL);
+				return (self::$aInstances[$strClassName] = NULL);
 		}
 		catch (Exception $ex)
 		{

@@ -1,14 +1,17 @@
 <?php
 require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 
+global $request;
+
 $config = array();
 
-$config['error'] = array(
+$config['message'] = array(
 	'EMAIL_EMPTY' => array('name_ru' => 'Email не задан'),
 	'PASSWORD_EMPTY' => array('name_ru' => 'Пароль не задан'),
 	'USER_NOT_FOUND' => array('name_ru' => 'Пользователь не найден'),
 	'USER_BLOCKED' => array('name_ru' => 'Пользователь заблокирован'),
-	'USER_DELETED' => array('name_ru' => 'Пользователь удален')
+	'USER_DELETED' => array('name_ru' => 'Пользователь удален'),
+	'LOGIN_OK' => array('name_ru' => 'Вход выполнен. Перенаправление...')
 );
 
 $config['user_status'] = array(
@@ -40,4 +43,5 @@ $config['editor']['default']['fields'] = array(
 	'group_id' => array('name_ru' => 'Группа', 'is_null' => '0', 'is_skip' => '1'),
 	'status' => array('name_ru' => 'Статус', 'is_null' => '0', 'is_skip' => '1')
 );
+
 return $config;

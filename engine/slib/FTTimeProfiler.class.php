@@ -10,6 +10,10 @@ class FTTimeProfiler extends FTFireTrot
 
 	private $m_timeStart;
 
+	/**
+	 * Creates instance
+	 * @param Boolean $bIsStart - autostart (default: FALSE)
+	 */
 	public function __construct($bIsStart = FALSE)
 	{
 		if ($bIsStart)

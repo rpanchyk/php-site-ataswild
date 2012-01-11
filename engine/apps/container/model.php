@@ -40,7 +40,7 @@ class ContainerModel extends BaseModel
 				}
 
 				// Pack result
-				$data[$i]['model_result_data'] = $dataGetByRow[0];
+				$data[$i][ParamsMvc::MODEL_RESULT_DATA] = $dataGetByRow[0];
 			}
 
 			return $data;
@@ -93,7 +93,7 @@ class ContainerModel extends BaseModel
 
 								// Add form
 								$dataFormParams = array('alias' => 'feedback', 'header_text' => 'Оставить отзыв', '_parent_id' => $dataResult[0]['_id']);
-								$strResult .= $ctrlComments->view->render('feedback_form', $dataFormParams, FALSE);
+								$strResult .= $ctrlComments->view->render('feedback_form', $dataFormParams);
 
 								$reqComments = new ActionRequest($request);
 								$reqComments->params[Params::OPERATION_NAME] = Params::OPERATION_GET;
@@ -111,7 +111,7 @@ class ContainerModel extends BaseModel
 									$aComment['alias'] = 'feedback';
 									$aComment['date'] = date('d/m/Y', strtotime($aComment['_date_create']));
 									// Render (!)
-									$strResult .= $ctrlComments->view->render('feedback', $aComment, FALSE);
+									$strResult .= $ctrlComments->view->render('feedback', $aComment);
 									//$this->view->renderText($row['markup'], $row[ParamsMvc::MODEL_RESULT_DATA]);
 								}
 							}
@@ -461,12 +461,16 @@ class ContainerModel extends BaseModel
 			$aResult = array();
 
 			$controller = MvcFactory::create($aAppAlias['app'], ParamsMvc::ENTITY_CONTROLLER);
+			
+			// Check, if such alias exists
 			$reqGet = new ActionRequest($request);
 			$reqGet->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 			$reqGet->params[Params::ALIAS] = $aAppAlias['alias'];
 			$reqGet->params['is_not_process_markup'] = TRUE;
 			$reqGet->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
 			$dataGet = $controller->run($reqGet, $response);
+			
+			//FTException::throwOnTrue(FTArrayUtils::checkData($dataGet), 'Object already exists with alias: '.$aAppAlias['alias']);
 
 			// Add new item	
 			if (!FTArrayUtils::checkData($dataGet))

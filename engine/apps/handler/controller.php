@@ -24,15 +24,12 @@ class HandlerController extends BaseController implements IHtmlable, IJsonable
 			// Get object operation
 			$objectOperation = @$request->dataWeb->request['object_operation'];
 			FTException::throwOnTrue(empty($objectOperation), 'No object operation');
-
+			
 			// Execute
 			$req = new ActionRequest($request);
 			$req->params = array_merge(is_array(@$req->params) ? $req->params : array(), $request->dataWeb->request);
 			$req->params[Params::OPERATION_NAME] = strtolower($objectApp) . '_' . strtolower($objectOperation);
 			$this->m_data = $this->model->execute($req, $response, $this);
-
-			// Check error
-			FTException::throwOnTrue(!is_array($this->m_data) && isset($this->config[$this->m_data]), @$this->config[$this->m_data]);
 
 			// Show result
 			if (!@$request->params[ParamsMvc::IS_NOT_RENDER])
@@ -47,6 +44,9 @@ class HandlerController extends BaseController implements IHtmlable, IJsonable
 				global $engineConfig;
 
 				// Show error
+				if (isset($this->config['message'][$ex->getMessage()]['name_ru']))
+				echo $this->config['message'][$ex->getMessage()]['name_ru'];
+				else
 				echo $this->m_errorEdge . FTException::toStringForWeb($ex, $engineConfig['system']['is_debug']) . $this->m_errorEdge;
 			}
 			else
