@@ -62,7 +62,7 @@ class FrontController extends BaseController //implements IHtmlable, IXmlable
 			$req->params[Params::ALIAS] = $request->dataMvc->getController();
 			$data = $ctrl->run($req, $response);
 
-			$ctrl->view->render('index', array('content' => $data), TRUE);
+			echo $ctrl->view->render('index', array('content' => $data[0]));
 		}
 		catch (Exception $ex)
 		{

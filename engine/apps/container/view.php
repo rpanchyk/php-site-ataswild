@@ -3,44 +3,57 @@ require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 
 class ContainerView extends BaseView
 {
-	public function renderText($text, $data = array())
+	public function render($template, $data, $bIsUseTemplateAsMarkup = FALSE)
 	{
-		try
+		FTException::throwOnTrue(!FTArrayUtils::checkData($data, 0), 'No data for view');
+
+		// Row, for replacing array
+		$strRow = '';
+
+		// Go through input data
+		foreach ($data as $dataKey => $dataValue)
 		{
-			// Modify $data before render
-			// All actions here, because data structure is known!
-			foreach ($data as $dataKey => $dataValue)
+			// If string, don't process value
+			if (!is_array($dataValue))
+				continue;
+
+			if (!FTArrayUtils::containsKeyCI(ParamsMvc::CONTAINER_DATA, $dataValue))
 			{
-				if (FTArrayUtils::checkData(@$dataValue[0]))
+				// Here value must be simple 1-dimens. array
+				$strRow = parent::render($dataValue['template'], $dataValue);
+			}
+			else
+			{
+				// Unwind a ball of container data
+
+				// Init markup
+				$strMarkup = $dataValue['markup'];
+
+				// Process container data
+				foreach ($dataValue[ParamsMvc::CONTAINER_DATA] as $itemKey => $itemValue)
 				{
-					// Data to modify
-					$data4render = @$dataValue[0][ParamsMvc::MODEL_RESULT_DATA];
-					if (FTArrayUtils::checkData($data4render))
+					$dataItem = $itemValue[0];
+					if (!FTArrayUtils::containsKeyCI(ParamsMvc::CONTAINER_DATA, $dataItem))
 					{
-						// Get markup
-						FTException::throwOnTrue(!FTArrayUtils::containsKeyCI('markup', $dataValue[0]), 'No markup');
-						$strResult = $dataValue[0]['markup'];
-
-						foreach ($data4render as $key => $aRows)
-						{
-							$row = $aRows[0];
-							if (!FTArrayUtils::containsKeyCI(ParamsMvc::MODEL_RESULT_DATA, $row))
-								$strResult = str_replace('{' . $key . '}', parent::render($row['template'], $row), $strResult);
-							else
-								$strResult = $this->renderText($row['markup'], $row[ParamsMvc::MODEL_RESULT_DATA]);
-						}
-
-						// Replace data
-						$data[$dataKey] = $strResult;
+						$str = $this->render($dataItem['template'], $dataItem);
+						$strMarkup = str_replace('{' . $itemKey . '}', $str, $strMarkup);
+					}
+					else
+					{
+						// Render and use template as markup
+						$strMarkup = $this->render($strMarkup, array($itemKey => $dataItem), TRUE);
 					}
 				}
+
+				// Set result HTML for key
+				$strRow = $strMarkup;
 			}
 
-			return parent::renderText($text, $data);
+			// Replace data with string
+			$data[$dataKey] = $strRow;
 		}
-		catch (Exception $ex)
-		{
-			throw $ex;
-		}
+
+		// Get result html
+		return parent::render($template, $data, $bIsUseTemplateAsMarkup);
 	}
 }

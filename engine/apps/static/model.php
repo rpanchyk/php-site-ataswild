@@ -7,7 +7,7 @@ class StaticModel extends BaseModel
 	{
 		try
 		{
-			FTException::throwOnTrue(!isset($request->params[Params::ALIAS]) || empty($request->params[Params::ALIAS]), 'No ' . Params::ALIAS);
+			FTException::throwOnTrue(@empty($request->params[Params::ALIAS]), 'No ' . Params::ALIAS);
 
 			// Get container
 			$params = array();
@@ -15,14 +15,18 @@ class StaticModel extends BaseModel
 			$params[ParamsSql::RESTRICTION] = 'alias=:alias AND is_active=1';
 			$params[ParamsSql::RESTRICTION_DATA] = array(':alias' => $request->params[Params::ALIAS]);
 
-			if (!@empty($request->params[ParamsSql::RESTRICTION]) && @is_array($request->params[ParamsSql::RESTRICTION_DATA]))
+			if (!@empty($request->params[ParamsSql::RESTRICTION]) && FTArrayUtils::checkData(@$request->params[ParamsSql::RESTRICTION_DATA]))
 			{
 				$params[ParamsSql::RESTRICTION] .= ' AND ' . $request->params[ParamsSql::RESTRICTION];
 				$params[ParamsSql::RESTRICTION_DATA] = array_merge($params[ParamsSql::RESTRICTION_DATA], $request->params[ParamsSql::RESTRICTION_DATA]);
+				//echo '--- merged!!!!';
 			}
 
 			$params[ParamsSql::LIMIT] = '1';
 			$data = $request->db->get($params);
+
+			//echo '$params:<pre>'; print_r($params); echo '</pre>';
+			//echo '<pre>'; print_r($data); echo '</pre>';
 
 			if (!FTArrayUtils::checkData($data))
 			{

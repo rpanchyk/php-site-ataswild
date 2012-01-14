@@ -356,13 +356,46 @@ class HandlerModel extends BaseModel
 			$oAlias = @$request->dataWeb->request['object_alias'];
 			FTException::throwOnTrue(empty($oAlias), 'No alias');
 
+			global $engineConfig;
+
+			// Process 4 lang
+			// 1 - get by alias and lang
+			// 2 - if no => create default record
+
 			$ctrl = MvcFactory::create('static', ParamsMvc::ENTITY_CONTROLLER);
 			$req = new ActionRequest($request);
 			$req->params[Params::ALIAS] = $oAlias;
 			$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
+
+			// Add lang restriction
+			$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+			$req->params[ParamsSql::RESTRICTION_DATA][':lang'] = $this->getLang();
+
 			$data = $ctrl->run($req, $response);
 
-			FTException::throwOnTrue(!FTArrayUtils::checkData(@$data[0]), 'No data');
+			//FTException::throwOnTrue(!FTArrayUtils::checkData(@$data[0]), 'No data');
+
+			if (!FTArrayUtils::checkData($data))
+			{
+				// Get default data
+				$dataForAdd = $this->fillDefaultValues($ctrl, ParamsConfig::EDITOR_DEFAULT);
+
+				// Add some values
+				$dataForAdd['alias'] = $oAlias;
+				$dataForAdd['lang'] = $this->getLang();
+
+				// Add record
+				$reqAdd = new ActionRequest($request);
+				$reqAdd->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
+				$reqAdd->params[Params::DATA] = $dataForAdd;
+				$dataAdd = $ctrl->run($reqAdd, $response);
+
+				// Check
+				FTException::throwOnTrue(!FTArrayUtils::checkData($dataAdd), 'Cannot add app.alias: ' . $request->dataWeb->request['object_app'] . '.' . $oAlias);
+
+				// Put data
+				$data[0] = $dataAdd[0];
+			}
 
 			// Html form
 			$reqForm = new ActionRequest($request);
@@ -402,6 +435,10 @@ class HandlerModel extends BaseModel
 				$req = new ActionRequest($request);
 				$req->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
 				$req->params[ParamsSql::RESTRICTION] = 'alias=\'' . $request->dataWeb->request['object_alias'] . '\'';
+
+				// Add lang restriction
+				$req->params[ParamsSql::RESTRICTION] .= ' AND lang=' . $this->getLang(TRUE);
+				
 				$req->params[Params::DATA] = $dataDecoded;
 				$dataResult = $ctrl->run($req, $response);
 
@@ -547,8 +584,8 @@ class HandlerModel extends BaseModel
 
 				if ($k == '_id' || !FTArrayUtils::containsKeyCI($k, $ctrl->config['editor'][$editorID]['fields']))
 					continue;
-				if (@$ctrl->config['editor'][$editorID]['fields'][$k]['is_readonly'])
-					continue;
+				//if (@$ctrl->config['editor'][$editorID]['fields'][$k]['is_readonly'])
+				//	continue;
 				if (@$ctrl->config['editor'][$editorID]['fields'][$k]['is_skip'])
 					continue;
 
@@ -575,5 +612,40 @@ class HandlerModel extends BaseModel
 		{
 			throw $ex;
 		}
+	}
+	private function fillDefaultValues($ctrl, $editorID = ParamsConfig::EDITOR_DEFAULT)
+	{
+		try
+		{
+			FTException::throwOnTrue(!FTArrayUtils::checkData($ctrl->config['editor'][$editorID]['fields'], 0), 'No editor fields to fill default values');
+
+			$data = array();
+
+			// Fill default values
+			if (FTArrayUtils::checkData($ctrl->config['editor'][$editorID]['fields']))
+				foreach ($ctrl->config['editor'][$editorID]['fields'] as $confKey => $confValue)
+					if (isset($confValue['default_value']))
+						$data[$confKey] = $confValue['default_value'];
+
+			return $data;
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	private function getLang($bIsQuoted = FALSE)
+	{
+		try
+		{
+			global $engineConfig, $request;
+
+			return ($bIsQuoted ? '"' : '') . (!(@empty($request->dataWeb->cookie[$engineConfig['cookie']['name_lang']])) ? $request->dataWeb->cookie[$engineConfig['cookie']['name_lang']] : $engineConfig['mvc_data']['lang_default']) . ($bIsQuoted ? '"' : '');
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+
 	}
 }

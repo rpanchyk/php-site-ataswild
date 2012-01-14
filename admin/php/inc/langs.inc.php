@@ -3,7 +3,7 @@ function showLangs()
 {
 	global $engineConfig, $request;
 	
-	if (!@is_array($engineConfig['mvc_data']['langs']) || !count($engineConfig['mvc_data']['langs']))
+	if (!FTArrayUtils::checkData(@$engineConfig['mvc_data']['langs']))
 		return;
 	
 	?>
@@ -19,16 +19,39 @@ function showLangs()
 			);
 
 			// Redirect
-			$(location).attr('href', "http:\/\/" + "<?=$request->dataWeb->server['SERVER_NAME']?><?=$request->dataWeb->server['REQUEST_URI']?>");
+			//$(location).attr('href', "http:\/\/" + "<?=$request->dataWeb->server['SERVER_NAME']?><?=$request->dataWeb->server['REQUEST_URI']?>");
+			var lcq = unescape(atob($.cookie("ftlcq")));
+			if (lcq != '')
+				doajaxContent(lcq, null);
 		}
+
+		// 'font-weight:bold;background-color:#eee;'
+		clearActive();
+		$(obj).css("font-weight", "bold");
+		$(obj).css("background-color", "#eee");
+	}
+	function clearActive(){
+		$('.lang_link').each(function(){
+			$(this).css("font-weight", "");
+			$(this).css("background-color", "");
+		});
 	}
 	</script>
+	
+	<style type="text/css">
+	/* <![CDATA[ */
+	.lang_link {
+		text-decoration:none;padding:3px;
+	}
+	/* ]]> */
+	</style>
+	
 	<div>
 	<?
 	foreach ($engineConfig['mvc_data']['langs'] as $value)
 	{
 		$styleActive = $value == $request->dataWeb->cookie[$engineConfig['cookie']['name_lang']] ? 'font-weight:bold;background-color:#eee;' : '';
-		?><a href="#" onclick="setCookie(this)" style="text-decoration:none;padding:3px;<?=$styleActive?>"><?=$value?></a> | <?
+		?><a href="#" onclick="setCookie(this)" class="lang_link" style="<?=$styleActive?>"><?=$value?></a> | <?
 	}
 	?></div><?
 }

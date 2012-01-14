@@ -1,5 +1,6 @@
 <?php
 require_once dirname(__FILE__) . '/../engine/core/main.php';
+require_once ADMIN_PATH . '/php/inc/langs.inc.php';
 
 // Create handler
 $handler = MvcFactory::create('handler', ParamsMvc::ENTITY_CONTROLLER);
@@ -63,6 +64,12 @@ $(document).ready(function () {
 
 	// Load tree
 	doajaxTree();
+
+	// Remove last content query
+	$.cookie("ftlcq", 
+		null, 
+		{ expires:365, path:"/", domain:"<?=$request->dataWeb->server['SERVER_NAME']?>" }
+	);
 });
 
 function doajaxContent(params, element)
@@ -89,6 +96,12 @@ function doajaxContent(params, element)
 			alert(textStatus + ': ' + errorThrown);
 		}
 	});
+
+	// Set cookie - last content query
+	$.cookie("ftlcq", 
+		btoa(escape(params)), 
+		{ expires:365, path:"/", domain:"<?=$request->dataWeb->server['SERVER_NAME']?>" }
+	);
 }
 
 function doajaxTree()
@@ -343,7 +356,7 @@ else
 	<div id="container">
 		<div class="ui-layout-north">
 			<a>Здравствуйте, <?php echo @$dataAuth[0]['name']; ?>!</a> [<a href="#" onclick="doLogout();" style="text-decoration:none;">Выход</a>]
-			<div style="float:right;"><?php //showLangs(); ?></div>
+			<div style="float:right;"><?php showLangs(); ?></div>
 		</div>
 		<div class="ui-layout-west" id="cptree"></div>
 		<div class="ui-layout-center"><div id="cnt"></div></div>

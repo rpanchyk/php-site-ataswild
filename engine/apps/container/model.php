@@ -25,7 +25,7 @@ class ContainerModel extends BaseModel
 
 			if (@$request->params['is_not_process_markup'])
 				return $data;
-
+			//echo '<pre>'; print_r($data); echo '</pre>';
 			for ($i = 0; $i < count($data); $i++)
 			{
 				// Get data by row
@@ -33,16 +33,17 @@ class ContainerModel extends BaseModel
 				$reqGetByRow->params[Params::DATA_ROW] = $data[$i];
 				$dataGetByRow = $this->opGetByRow($reqGetByRow, $response);
 
-				if (!FTArrayUtils::checkData($dataGetByRow))
+				if (!FTArrayUtils::checkData(@$dataGetByRow))
 				{
 					FTException::saveEx(new Exception('No data for row: #' . $i));
+					unset($data[$i]);
 					continue;
 				}
 
 				// Pack result
-				$data[$i][ParamsMvc::MODEL_RESULT_DATA] = $dataGetByRow[0];
+				$data[$i][ParamsMvc::CONTAINER_DATA] = $dataGetByRow[0];
 			}
-
+			//echo '<pre>'; print_r($data); echo '</pre>';//die();
 			return $data;
 		}
 		catch (Exception $ex)
@@ -76,7 +77,22 @@ class ContainerModel extends BaseModel
 					$req = new ActionRequest($request);
 					$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 					$req->params[Params::ALIAS] = $v['alias'];
+
+					if ($v['app'] != 'container')
+					{
+						// Add lang restriction
+						$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+						$req->params[ParamsSql::RESTRICTION_DATA][':lang'] = $request->dataMvc->getLanguage();
+					}
+
 					$strResult = $ctrl->run($req, $response);
+
+					if (!FTArrayUtils::checkData($strResult))
+					{
+						unset($aTagDataPair[$k]);
+						//$aTagDataPair[$k] = array();
+						continue;
+					}
 
 					if (FTArrayUtils::checkData(@$v['relations']))
 					{
@@ -112,17 +128,19 @@ class ContainerModel extends BaseModel
 									$aComment['date'] = date('d/m/Y', strtotime($aComment['_date_create']));
 									// Render (!)
 									$strResult .= $ctrlComments->view->render('feedback', $aComment);
-									//$this->view->renderText($row['markup'], $row[ParamsMvc::MODEL_RESULT_DATA]);
+									//$this->view->renderText($row['markup'], $row[ParamsMvc::CONTAINER_DATA]);
 								}
 							}
 						}
 						//$strResult .= '-0-0-0-0-';
 					}
 
+					$strResult[0]['app'] = $v['app'];
+
 					// Pack result
 					$aTagDataPair[$k] = $strResult;
 				}
-			//echo '<pre>'; print_r(array($aTagDataPair)); echo '</pre>';
+			//echo '<pre>'; print_r(array($aTagDataPair)); echo '</pre>';die();
 			return array($aTagDataPair);
 		}
 		catch (Exception $ex)
@@ -267,6 +285,8 @@ class ContainerModel extends BaseModel
 	{
 		try
 		{
+			//echo '<pre>'; print_r($request); echo '</pre>';
+
 			$params = array();
 			$params[ParamsSql::TABLE] = $this->m_entityName;
 			$params[ParamsSql::RESTRICTION] = isset($request->params[ParamsSql::RESTRICTION]) ? $request->params[ParamsSql::RESTRICTION] : 'is_section=1 AND is_active=1';
@@ -292,6 +312,8 @@ class ContainerModel extends BaseModel
 				$aTree[$i]['app'] = 'container';
 				$aTree[$i]['childs'] = $this->opGetTags($reqTags, $response);
 
+				//echo '<pre>'; print_r($aTree[$i]['childs']); echo '</pre>';
+
 				if (!FTArrayUtils::checkData($aTree[$i]['childs']))
 					continue;
 
@@ -299,18 +321,25 @@ class ContainerModel extends BaseModel
 				$reqParsedTags = new ActionRequest($request);
 				$reqParsedTags->params[Params::DATA] = $aTree[$i]['childs'];
 				$aParsedTags = $this->opParseTags($reqParsedTags, $response);
-				//echo '<pre>'; print_r($aParsedTags); echo '</pre>';
+
+				//echo '$aParsedTags<pre>'; print_r($aParsedTags); echo '</pre>';
+
 				if (FTArrayUtils::checkData($aParsedTags))
 					foreach ($aParsedTags as $k => $v)
 					{
 						// Call controller each of item
-						$controller = MvcFactory::create($v['app'], ParamsMvc::ENTITY_CONTROLLER);
-						$model = MvcFactory::create($v['app'], ParamsMvc::ENTITY_MODEL);
-						$req = new ActionRequest($request);
+						$ctrl = MvcFactory::create($v['app'], ParamsMvc::ENTITY_CONTROLLER);
+						//$model = MvcFactory::create($v['app'], ParamsMvc::ENTITY_MODEL);
+						$req = new ActionRequest($request, FALSE);
 						$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 						$req->params[Params::ALIAS] = $v['alias'];
-						$req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
-						$dataModel = $model->execute($req, $response, $controller);
+						//unset($req->params[ParamsSql::RESTRICTION]);
+						//unset($req->params[ParamsSql::RESTRICTION_DATA]);
+						//$req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
+						//$dataModel = $model->execute($req, $response, $controller);
+						$dataModel = $ctrl->run($req, $response);
+
+						//echo '<pre>'; print_r($dataModel); echo '</pre>';
 
 						if (!FTArrayUtils::checkData($dataModel))
 						{
@@ -367,7 +396,7 @@ class ContainerModel extends BaseModel
 								 $req->params[Params::ALIAS] = $relVal['alias'];
 								 $req->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
 								 $dataModel = $model->execute($req, $response, $controller);
-										
+																																		
 								 if (!FTArrayUtils::checkData($dataModel))
 								 {
 								 $aTree[$i]['childs'][$k]['childs'][$relKey] = array();
@@ -461,15 +490,23 @@ class ContainerModel extends BaseModel
 			$aResult = array();
 
 			$controller = MvcFactory::create($aAppAlias['app'], ParamsMvc::ENTITY_CONTROLLER);
-			
+
 			// Check, if such alias exists
 			$reqGet = new ActionRequest($request);
 			$reqGet->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 			$reqGet->params[Params::ALIAS] = $aAppAlias['alias'];
 			$reqGet->params['is_not_process_markup'] = TRUE;
 			$reqGet->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
+
+			if ($aAppAlias['app'] != 'container')
+			{
+				// Add lang restriction
+				$reqGet->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+				$reqGet->params[ParamsSql::RESTRICTION_DATA][':lang'] = $engineConfig['mvc_data']['lang_default'];
+			}
+
 			$dataGet = $controller->run($reqGet, $response);
-			
+
 			//FTException::throwOnTrue(FTArrayUtils::checkData($dataGet), 'Object already exists with alias: '.$aAppAlias['alias']);
 
 			// Add new item	
@@ -492,7 +529,7 @@ class ContainerModel extends BaseModel
 							$dataAdd[$confKey] = $confValue['default_value'];
 
 				$dataAdd['alias'] = $aAppAlias['alias'];
-				//$dataAdd['lang'] = $engineConfig['mvc_data']['lang_default'];
+				$dataAdd['lang'] = $engineConfig['mvc_data']['lang_default'];
 
 				if ($aAppAlias['app'] == 'container')
 					$dataAdd['is_section'] = '0';

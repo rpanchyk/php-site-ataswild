@@ -6,35 +6,28 @@ require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
  */
 class BaseView extends FTFireTrot implements IView
 {
-	protected $result;
-
-	public function __construct()
-	{
-		try
-		{
-			$this->result = '';
-		}
-		catch (Exception $ex)
-		{
-			throw $ex;
-		}
-	}
-
-	public function render($template, $data, $bIsMakeOut = FALSE)
+	public function render($template, $data, $bIsUseTemplateAsMarkup = FALSE)
 	{
 		try
 		{
 			global $engineConfig;
+
+			// Result HTML
+			$result = '';
 
 			FTException::throwOnTrue(!isset($template) || empty($template), 'No template');
 
 			// Get path to template file
 			$filePath = FTFileSystem::pathCombine(TEMPLATE_PATH, $engineConfig['out_data']['template'], 'html', $template . '.html');
 
-			FTException::throwOnTrue(!file_exists($filePath), 'File not found: ' . $filePath);
-
 			// Get template content
-			$this->result = file_get_contents($filePath);
+			if (!$bIsUseTemplateAsMarkup)
+			{
+				FTException::throwOnTrue(!file_exists($filePath), 'File not found: ' . $filePath);
+				$result = file_get_contents($filePath);
+			}
+			else
+				$result = $template;
 
 			// @todo - Process CSS files
 			// Regexp css
@@ -42,20 +35,16 @@ class BaseView extends FTFireTrot implements IView
 			// Replace <link rel="stylesheet" with css content
 
 			if (!FTArrayUtils::checkData($data))
-				return $this->result;
+				return $result;
 
-			// Global vars
+			// Set global vars
 			if (!isset($data['theme']))
 				$data['theme'] = $engineConfig['out_data']['web_path'] . '/html';
 
 			// Replace placeholders
-			$this->result = $this->renderText($this->result, $data);
+			$result = $this->renderText($result, $data);
 
-			// Show output
-			if ($bIsMakeOut)
-				echo $this->result;
-
-			return $this->result;
+			return $result;
 		}
 		catch (Exception $ex)
 		{
@@ -63,6 +52,12 @@ class BaseView extends FTFireTrot implements IView
 		}
 	}
 
+	/**
+	 * Replace keys with values in text
+	 * @param String $text - input text
+	 * @param Array $data - key => value pairs
+	 * @return String
+	 */
 	public function renderText($text, $data = array())
 	{
 		try

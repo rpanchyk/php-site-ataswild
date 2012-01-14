@@ -85,7 +85,7 @@ class ParamsMvc
 
 	const IS_NOT_RENDER = 'is_not_render';
 	const IS_NOT_EXECUTE = 'is_not_execute';
-	const MODEL_RESULT_DATA = 'model_result_data';
+	const CONTAINER_DATA = 'container_data';
 	const APP_NAME = 'app_name';
 }
 
