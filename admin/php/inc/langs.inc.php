@@ -50,7 +50,8 @@ function showLangs()
 	<?
 	foreach ($engineConfig['mvc_data']['langs'] as $value)
 	{
-		$styleActive = $value == $request->dataWeb->cookie[$engineConfig['cookie']['name_lang']] ? 'font-weight:bold;background-color:#eee;' : '';
+		$lang = @$request->dataWeb->cookie[$engineConfig['cookie']['name_lang']] ? $request->dataWeb->cookie[$engineConfig['cookie']['name_lang']] : $engineConfig['mvc_data']['lang_default'];
+		$styleActive = ($value == $lang ? 'font-weight:bold;background-color:#eee;' : '');
 		?><a href="#" onclick="setCookie(this)" class="lang_link" style="<?=$styleActive?>"><?=$value?></a> | <?
 	}
 	?></div><?
