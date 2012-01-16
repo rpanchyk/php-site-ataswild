@@ -25,6 +25,7 @@ class MvcFactory
 	 * @param String $strInstatnce - instance type
 	 * @param Array $args - arguments for instance constructor
 	 * @param Boolean $bIsSingleton - create instance as singleton (default: TRUE)
+	 * @return Instance of given type
 	 */
 	static public function create($strAppName, $strInstatnce, $args = NULL, $bIsSingleton = TRUE)
 	{

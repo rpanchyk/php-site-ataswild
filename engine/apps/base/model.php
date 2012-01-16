@@ -2,7 +2,7 @@
 require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 
 /**
- * Base model
+ * Base model - provides basic operations
  */
 class BaseModel extends FTFireTrot implements IModel
 {
@@ -95,6 +95,7 @@ class BaseModel extends FTFireTrot implements IModel
 
 	/**
 	 * Get app config
+	 * @deprecated Use Controller->config[...] instead
 	 */
 	protected function opGetConfig(ActionRequest & $request, ActionResponse & $response)
 	{
@@ -233,7 +234,7 @@ class BaseModel extends FTFireTrot implements IModel
 	}
 
 	/**
-	 * Get data by ID
+	 * Get data by row ID
 	 */
 	protected function opGetById(ActionRequest & $request, ActionResponse & $response)
 	{
@@ -256,7 +257,8 @@ class BaseModel extends FTFireTrot implements IModel
 	}
 
 	/**
-	 * Forms operation name
+	 * Return operation name
+	 * @param String $alias - operation alias
 	 */
 	protected function getOperationName($alias)
 	{
