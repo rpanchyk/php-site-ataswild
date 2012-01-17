@@ -95,14 +95,14 @@ class BaseModel extends FTFireTrot implements IModel
 
 	/**
 	 * Get app config
-	 * @deprecated Use Controller->config[...] instead
+	 * In app use Controller->config[...] instead
 	 */
 	protected function opGetConfig(ActionRequest & $request, ActionResponse & $response)
 	{
 		try
 		{
 			// Get application name
-			$appName = isset($request->params[ParamsMvc::APP_NAME]) ? $request->params[ParamsMvc::APP_NAME] : $this->m_entityName;
+			$appName = isset($request->params[ParamsMvc::APP_NAME]) ? $request->params[ParamsMvc::APP_NAME] : $this->getCustomEntityName($request);
 			$appName = strtolower($appName);
 
 			// Check file
@@ -130,7 +130,7 @@ class BaseModel extends FTFireTrot implements IModel
 				$configEditor = @$config[$request->params[ParamsConfig::DATA_OBJECT]]['editor'][$editorID];
 			else
 				throw new Exception('No editor found for app: ' . $appName);
-				//return $config;
+			//return $config;
 
 			// Check edtor fields
 			FTException::throwOnTrue(!FTArrayUtils::checkData(@$configEditor['fields']) && !@$skip_editor, 'No editor fields: ' . $appName . '.' . $editorID);
@@ -167,7 +167,7 @@ class BaseModel extends FTFireTrot implements IModel
 		try
 		{
 			$params = array();
-			$params[ParamsSql::TABLE] = $this->m_entityName;
+			$params[ParamsSql::TABLE] = $this->getCustomEntityName($request);
 			$params[ParamsSql::RESTRICTION] = !@empty($request->params[ParamsSql::RESTRICTION]) ? $request->params[ParamsSql::RESTRICTION] : NULL;
 			$params[ParamsSql::RESTRICTION_DATA] = !@empty($request->params[ParamsSql::RESTRICTION_DATA]) ? $request->params[ParamsSql::RESTRICTION_DATA] : NULL;
 			$params[ParamsSql::GROUP_BY] = isset($request->params[ParamsSql::GROUP_BY]) ? $request->params[ParamsSql::GROUP_BY] : NULL;
@@ -190,7 +190,7 @@ class BaseModel extends FTFireTrot implements IModel
 		try
 		{
 			$params = array();
-			$params[ParamsSql::TABLE] = $this->m_entityName;
+			$params[ParamsSql::TABLE] = $this->getCustomEntityName($request);
 			return $request->db->add($params, @$request->params[Params::DATA]);
 		}
 		catch (Exception $ex)
@@ -207,7 +207,7 @@ class BaseModel extends FTFireTrot implements IModel
 		try
 		{
 			$params = array();
-			$params[ParamsSql::TABLE] = $this->m_entityName;
+			$params[ParamsSql::TABLE] = $this->getCustomEntityName($request);
 			$params[ParamsSql::RESTRICTION] = !@empty($request->params[ParamsSql::RESTRICTION]) ? $request->params[ParamsSql::RESTRICTION] : NULL;
 			$params[ParamsSql::RESTRICTION_DATA] = !@empty($request->params[ParamsSql::RESTRICTION_DATA]) ? $request->params[ParamsSql::RESTRICTION_DATA] : NULL;
 			return $request->db->update($params, @$request->params[Params::DATA]);
@@ -244,7 +244,7 @@ class BaseModel extends FTFireTrot implements IModel
 			FTException::throwOnTrue(!isset($request->params[Params::ID]) || !intval($request->params[Params::ID]), 'No ' . Params::ID);
 
 			$params = array();
-			$params[ParamsSql::TABLE] = $this->m_entityName;
+			$params[ParamsSql::TABLE] = $this->getCustomEntityName($request);
 			$params[ParamsSql::RESTRICTION] = '_id=:_id';
 			$params[ParamsSql::RESTRICTION_DATA] = array(':_id' => $request->params[Params::ID]);
 			$params[ParamsSql::LIMIT] = '1';
@@ -260,7 +260,7 @@ class BaseModel extends FTFireTrot implements IModel
 	 * Return operation name
 	 * @param String $alias - operation alias
 	 */
-	protected function getOperationName($alias)
+	private function getOperationName($alias)
 	{
 		try
 		{
@@ -278,4 +278,24 @@ class BaseModel extends FTFireTrot implements IModel
 			throw $ex;
 		}
 	}
+
+	/**
+	 * Return custom entity name
+	 * @param ActionRequest $request - input request
+	 */
+	private function getCustomEntityName(ActionRequest & $request)
+	{
+		try
+		{
+			if (isset($request->params[ParamsSql::CUSTOM_TABLE_NAME]))
+				return $request->params[ParamsSql::CUSTOM_TABLE_NAME];
+
+			return $this->m_entityName;
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+
 }

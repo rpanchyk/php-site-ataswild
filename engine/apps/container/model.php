@@ -516,15 +516,15 @@ class ContainerModel extends BaseModel
 				$dataAdd = array();
 
 				// Get app config
-				$reqGetConfig = new ActionRequest($request);
-				$reqGetConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
-				$reqGetConfig->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
-				$reqGetConfig->params[ParamsMvc::APP_NAME] = $aAppAlias['app'];
-				$resGetConfig = $controller->run($reqGetConfig, $response);
+				//$reqGetConfig = new ActionRequest($request);
+				//$reqGetConfig->params[Params::OPERATION_NAME] = Params::OPERATION_GET_CONFIG;
+				//$reqGetConfig->params[ParamsMvc::IS_NOT_RENDER] = TRUE;
+				//$reqGetConfig->params[ParamsMvc::APP_NAME] = $aAppAlias['app'];
+				//$resGetConfig = $controller->run($reqGetConfig, $response);
 
 				// Fill values
-				if (FTArrayUtils::checkData(@$resGetConfig['editor'][ParamsConfig::EDITOR_DEFAULT]['fields']))
-					foreach ($resGetConfig['editor'][ParamsConfig::EDITOR_DEFAULT]['fields'] as $confKey => $confValue)
+				if (FTArrayUtils::checkData(@$controller->config['editor'][ParamsConfig::EDITOR_DEFAULT]['fields']))
+					foreach ($controller->config['editor'][ParamsConfig::EDITOR_DEFAULT]['fields'] as $confKey => $confValue)
 						if (isset($confValue['default_value']))
 							$dataAdd[$confKey] = $confValue['default_value'];
 

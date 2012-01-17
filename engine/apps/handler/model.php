@@ -145,10 +145,23 @@ class HandlerModel extends BaseModel
 				$strTree .= ($bHasChilds ? '<li class="closed expandable"><div class="hitarea closed-hitarea expandable-hitarea"></div>' : '<li>');
 				//$strTree .= ($bHasChilds ? '<li class="collapsable"><div class="hitarea collapsable-hitarea"></div>' : '<li>');
 				$strTree .= '<span class="' . ($bHasChilds ? 'folder' : 'file') . '">';
+
 				$strTree .= '<a class="treelink" onclick="doajaxContent(\'';
 				$strTree .= 'object_app=' . $row['app'];
 				$strTree .= '&object_alias=' . $row['alias'];
 				$strTree .= '&object_operation=get';
+
+				//				$ctrl = MvcFactory::create($row['app'], ParamsMvc::ENTITY_CONTROLLER);
+				//				if (isset($ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]))
+				//				{
+				//					
+				//				}
+				//				else
+				//				{
+				//					$strTree .= 'object_app=' . $row['app'];
+				//					$strTree .= '&object_alias=' . $row['alias'];
+				//					$strTree .= '&object_operation=get';
+				//				}
 
 				//				if (isset($row['_parent_id']))
 				//					$strTree .= '&_parent_id=' . $row['_parent_id'];
@@ -171,6 +184,27 @@ class HandlerModel extends BaseModel
 				 $strTree .= '</a>';
 				 }
 				 */
+
+				$ctrl = MvcFactory::create($row['app'], ParamsMvc::ENTITY_CONTROLLER);
+				if (isset($ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]))
+				{
+					$strTree .= '<div style="float:right; display:inline;">';
+					$strTree .= '<a class="treelink" onclick="doajaxContent(\'';
+					$strTree .= 'object_app=' . $row['app'];
+					$strTree .= '&object_alias=' . $row['alias'];
+					$strTree .= '&object_operation=get_settings';
+					$strTree .= '\', this)" title="Настройки">' . '<img src="images/tree_settings.png" border="0" style="height:12px;" />' . '</a>';
+					$strTree .= '</div>';
+
+					$strTree .= '<div style="float:right; display:inline;">';
+					$strTree .= '<a class="treelink" onclick="doajaxContent(\'';
+					$strTree .= 'object_app=' . $row['app'];
+					$strTree .= '&object_alias=' . $row['alias'];
+					$strTree .= '&object_operation=new';
+					$strTree .= '\', this)" title="Добавить">' . '<img src="images/tree_add_file_16x16.png" border="0" style="height:12px;" />' . '</a>';
+					$strTree .= '</div>';
+				}
+
 				$strTree .= '</span>';
 
 				if ($bHasChilds)
@@ -232,6 +266,10 @@ class HandlerModel extends BaseModel
 						$data[$confKey] = $confValue['default_value'];
 					else
 						$data[$confKey] = '';
+
+			// Hack: ctrl is singleton
+			// Change editor params
+			$ctrl->config['editor'][ParamsConfig::EDITOR_DEFAULT]['fields']['alias']['is_readonly'] = '0';
 
 			// Html form
 			$reqForm = new ActionRequest($request);
@@ -331,6 +369,8 @@ class HandlerModel extends BaseModel
 			}
 			catch (Exception $ex2)
 			{
+				FTException::saveEx($ex2);
+
 				$formResultMessageColor = 'red';
 				$formResultMessageText = 'Ошибка при сохранении данных:<div>' . $ex2->getMessage() . '</div>';
 			}
@@ -438,7 +478,7 @@ class HandlerModel extends BaseModel
 
 				// Add lang restriction
 				$req->params[ParamsSql::RESTRICTION] .= ' AND lang=' . $this->getLang(TRUE);
-				
+
 				$req->params[Params::DATA] = $dataDecoded;
 				$dataResult = $ctrl->run($req, $response);
 
@@ -476,16 +516,19 @@ class HandlerModel extends BaseModel
 
 			// Get controller
 			$ctrl = $request->params[ParamsMvc::ENTITY_CONTROLLER];
+
 			// Get data
 			$data = @$request->params[Params::DATA];
-			if (FTArrayUtils::checkData($data))
+			if (FTArrayUtils::checkData($data, 0))
 			{
 				// Get form html
 				$res .= '<form id="simple_form" action="' . $this->m_Controller->config['web_path'] . '" onsubmit="formSubmit(this); return false;" method="POST">';
 				$res .= '<table border="0" cellpadding="0" cellspacing="0" style="width:95%; font:14px Verdana;"><tbody>';
 
+				$editorID = isset($request->params[ParamsConfig::EDITOR_ID]) ? $request->params[ParamsConfig::EDITOR_ID] : ParamsConfig::EDITOR_DEFAULT;
+
 				$strTextareaIds = '';
-				foreach ($ctrl->config['editor'][ParamsConfig::EDITOR_DEFAULT]['fields'] as $k => $v)
+				foreach ($ctrl->config['editor'][$editorID]['fields'] as $k => $v)
 				{
 					if (@$v['is_skip'])
 						continue;
@@ -548,6 +591,8 @@ class HandlerModel extends BaseModel
 				$res .= '<input type="hidden" name="object_app" value="' . $request->params['object_app'] . '" />';
 				$res .= '<input type="hidden" name="object_operation" value="' . $request->params[Params::OPERATION_NAME] . '" />';
 
+				$res .= '<input type="hidden" name="called_from_operation" value="' . $request->params['object_operation'] . '" />';
+
 				if (isset($request->params['object_alias']))
 					$res .= '<input type="hidden" name="object_alias" value="' . $request->params['object_alias'] . '" />';
 
@@ -564,6 +609,476 @@ class HandlerModel extends BaseModel
 				$res .= '<div style="line-height:60px; text-align:center; vertical-align:middle;">' . 'Нет данных' . '</div>';
 
 			return $res;
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+
+	protected function opGetListForm(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			$appName = @$request->params['object_app'];
+			FTException::throwOnTrue(empty($appName), 'No app');
+
+			$ctrl = $request->params[ParamsMvc::ENTITY_CONTROLLER];
+			FTException::throwOnTrue(is_null($ctrl), 'No ' . ParamsMvc::ENTITY_CONTROLLER);
+
+			// Result html
+			$res = '';
+
+			// Get data
+			$data = @$request->params[Params::DATA];
+			if (FTArrayUtils::checkData($data))
+			{
+				// Get editor for form
+				//$editorID = isset($formParams['editor']) ? $formParams['editor'] : ParamsConfig::EDITOR_LIST;
+				$editorID = ParamsConfig::EDITOR_LIST;
+
+				// Get app config
+				$config = $ctrl->config;
+				FTException::throwOnTrue(!FTArrayUtils::checkData(@$config['editor'][$editorID]['fields']), 'No editor: ' . $editorID);
+
+				$res .= '<div>';
+				$res .= '<table style="width:100%; border:1px solid #D4D4D4;" cellspacing="0" cellpadding="0">';
+
+				// Header
+				$res .= '<tr style="background-color:#EFEFEF; text-align:center;">';
+				foreach ($config['editor'][$editorID]['fields'] as $k => $v)
+				{
+					$res .= '<td style="' . (isset($v['style']) ? $v['style'] : '') . ' padding:2px;">' . $v['name_ru'] . '</td>';
+				}
+				$res .= '</tr>';
+
+				//echo '<pre>'; print_r($data); echo '</pre>';
+
+				// Body
+				foreach ($data as $row)
+				{
+					$res .= '<tr onclick="doajaxContent(\'';
+
+					//					if ($appName == 'user')
+					//						$res .= 'settings=user';
+					//					else
+					$res .= 'object_app=' . $appName;
+
+					$res .= '&' . ParamsConfig::OBJECT_ATTACH_ENTITY . '_id=' . $row['_id'];
+					$res .= '&object_operation=get_item_by_id';
+
+					$res .= '\', \'is_not_change_bg\')">';
+					foreach ($config['editor'][$editorID]['fields'] as $k => $v)
+					{
+						$res .= '<td style="' . (isset($v['style']) ? $v['style'] : '') . 'border:1px solid #D4D4D4; padding:2px; cursor:pointer;">';
+						$res .= $row[$k];
+						$res .= '</td>';
+					}
+					$res .= '</tr>';
+				}
+
+				$res .= '</table>';
+				$res .= '</div>';
+			}
+			else
+			{
+				$data = is_array($data) ? 'Нет данных' : $data;
+				$res .= '<div style="line-height:60px; text-align:center; vertical-align:middle;">' . $data . '</div>';
+			}
+
+			return $res;
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+
+	protected function opNewsGetSettings(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			$oAlias = @$request->dataWeb->request['object_alias'];
+			FTException::throwOnTrue(empty($oAlias), 'No alias');
+
+			global $engineConfig;
+
+			// Process 4 lang
+			// 1 - get by alias and lang
+			// 2 - if no => create default record
+
+			// Check auth
+			$this->opUserGetSession($request, $response);
+
+			$ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
+			$req = new ActionRequest($request);
+			$req->params[Params::ALIAS] = $oAlias;
+			$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
+
+			// Add lang restriction
+			$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+			$req->params[ParamsSql::RESTRICTION_DATA][':lang'] = $this->getLang();
+
+			$data = $ctrl->run($req, $response);
+
+			//FTException::throwOnTrue(!FTArrayUtils::checkData(@$data[0]), 'No data');
+
+			if (!FTArrayUtils::checkData($data))
+			{
+				// Get default data
+				$dataForAdd = $this->fillDefaultValues($ctrl, ParamsConfig::EDITOR_DEFAULT);
+
+				// Add some values
+				$dataForAdd['alias'] = $oAlias;
+				$dataForAdd['lang'] = $this->getLang();
+
+				// Add record
+				$reqAdd = new ActionRequest($request);
+				$reqAdd->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
+				$reqAdd->params[Params::DATA] = $dataForAdd;
+				$dataAdd = $ctrl->run($reqAdd, $response);
+
+				// Check
+				FTException::throwOnTrue(!FTArrayUtils::checkData($dataAdd), 'Cannot add app.alias: ' . $request->dataWeb->request['object_app'] . '.' . $oAlias);
+
+				// Put data
+				$data[0] = $dataAdd[0];
+			}
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $data[0];
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+			return $this->opGetDefaultForm($reqForm, $response);
+
+			return '-';
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	protected function opNewsUpdate(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			$invokedOp = @$request->dataWeb->request['called_from_operation'];
+			FTException::throwOnTrue(empty($invokedOp), 'No called_from_operation');
+
+			switch ($invokedOp)
+			{
+				case 'get_settings':
+					return $this->opNewsUpdateSettings($request, $response);
+					break;
+				default:
+					return $this->opNewsUpdateData($request, $response);
+					break;
+			}
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	protected function opNewsUpdateSettings(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			FTException::throwOnTrue(@empty($request->dataWeb->request['form_submitted']), 'Only http req-s allowed');
+			FTException::throwOnTrue(@empty($request->params['object_alias']), 'No alias');
+
+			$ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
+
+			// Form data to process
+			$dataDecoded = array();
+
+			$formResultMessageColor = 'green';
+			$formResultMessageText = 'Данные сохранены успешно';
+
+			try
+			{
+				// Prepare data
+				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl);
+
+				// Check obligatory fields
+				$this->checkObligatoryFields($dataDecoded, $ctrl);
+
+				$req = new ActionRequest($request);
+				$req->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+				$req->params[ParamsSql::RESTRICTION] = 'alias=\'' . $request->params['object_alias'] . '\'';
+
+				// Add lang restriction
+				$req->params[ParamsSql::RESTRICTION] .= ' AND lang=' . $this->getLang(TRUE);
+
+				$req->params[Params::DATA] = $dataDecoded;
+				$dataResult = $ctrl->run($req, $response);
+
+				FTException::throwOnTrue(!FTArrayUtils::checkData($dataResult), 'No record');
+			}
+			catch (Exception $ex2)
+			{
+				$formResultMessageColor = 'red';
+				$formResultMessageText = 'Ошибка при сохранении данных:<div>' . $ex2->getMessage() . '</div>';
+			}
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $dataDecoded;
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+			$reqForm->params['form_result'] = '<div style="color:' . $formResultMessageColor . '; text-align:center; border:1px dotted ' . $formResultMessageColor . '; padding:3px;">' . $formResultMessageText . '</div>';
+			$reqForm->params['object_operation'] = @$request->dataWeb->request['called_from_operation'];
+			return $this->opGetDefaultForm($reqForm, $response);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	protected function opNewsUpdateData(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			FTException::throwOnTrue(@empty($request->dataWeb->request['form_submitted']), 'Only http req-s allowed');
+			FTException::throwOnTrue(@empty($request->dataWeb->request['_id']), 'No ID');
+
+			$ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
+
+			// Form data to process
+			$dataDecoded = array();
+
+			$formResultMessageColor = 'green';
+			$formResultMessageText = 'Данные сохранены успешно';
+
+			try
+			{
+				// Prepare data
+				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
+
+				// Check obligatory fields
+				$this->checkObligatoryFields($dataDecoded, $ctrl);
+
+				$req = new ActionRequest($request);
+				$req->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+				$req->params[ParamsSql::RESTRICTION] = '_id=' . $request->dataWeb->request['_id'] . '';
+				$req->params[Params::DATA] = $dataDecoded;
+				$dataResult = $ctrl->run($req, $response);
+
+				FTException::throwOnTrue(!FTArrayUtils::checkData($dataResult), 'No record');
+
+				$dataDecoded['_id'] = $dataResult[0]['_id'];
+			}
+			catch (Exception $ex2)
+			{
+				$formResultMessageColor = 'red';
+				$formResultMessageText = 'Ошибка при сохранении данных:<div>' . $ex2->getMessage() . '</div>';
+			}
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $dataDecoded;
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+			$reqForm->params[ParamsConfig::EDITOR_ID] = $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY];
+			$reqForm->params['form_result'] = '<div style="color:' . $formResultMessageColor . '; text-align:center; border:1px dotted ' . $formResultMessageColor . '; padding:3px;">' . $formResultMessageText . '</div>';
+			$reqForm->params['object_operation'] = @$request->dataWeb->request['called_from_operation'];
+			return $this->opGetDefaultForm($reqForm, $response);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	protected function opNewsGet(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			$oAlias = @$request->dataWeb->request['object_alias'];
+			FTException::throwOnTrue(empty($oAlias), 'No alias');
+
+			$ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
+
+			$req = new ActionRequest($request);
+			$req->params[Params::ALIAS] = $oAlias;
+			$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET;
+
+			// Add lang restriction
+			$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+			$req->params[ParamsSql::RESTRICTION_DATA][':lang'] = $this->getLang();
+			$req->params[ParamsSql::ORDER_BY] = '_id DESC';
+
+			$data = $ctrl->run($req, $response);
+
+			//			echo '<pre>';
+			//			print_r($data);
+			//			echo '</pre>';
+			//			die();
+
+			FTException::throwOnTrue(!FTArrayUtils::checkData(@$data[0]), 'No data');
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $data[0][ParamsConfig::OBJECT_ATTACH_ENTITY];
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			//$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+
+			return $this->opGetListForm($reqForm, $response);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	protected function opNewsGetItemById(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			$ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
+
+			$req = new ActionRequest($request);
+			$req->params[Params::OPERATION_NAME] = 'get_item_by_id';
+			$req->params[Params::ID] = @$request->dataWeb->request[ParamsConfig::OBJECT_ATTACH_ENTITY . '_id'];
+			$data = $ctrl->run($req, $response);
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $data[0][ParamsConfig::OBJECT_ATTACH_ENTITY][0];
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			$reqForm->params[ParamsConfig::EDITOR_ID] = $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY];
+			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+			return $this->opGetDefaultForm($reqForm, $response);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	protected function opNewsNew(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			$ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
+
+			// Get default data
+			$dataForAdd = $this->fillDefaultValues($ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
+
+			// Add some values
+			//$dataForAdd['alias'] = $oAlias;
+			//			$dataForAdd['lang'] = $this->getLang();
+			//
+			//			// Add record
+			//			$reqAdd = new ActionRequest($request);
+			//			$reqAdd->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
+			//			$reqAdd->params[Params::DATA] = $dataForAdd;
+			//			//$reqAdd->dataWeb->request['called_from_operation'] = 'new_item';
+			//			$dataAdd = $ctrl->run($reqAdd, $response);
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $dataForAdd;
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
+			$reqForm->params[ParamsConfig::EDITOR_ID] = $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY];
+			return $this->opGetDefaultForm($reqForm, $response);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	protected function opNewsAdd(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			/*
+			 FTException::throwOnTrue(@empty($request->dataWeb->request['form_submitted']), 'Only http req-s allowed');
+						
+			 $ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
+			
+			 // Get default data
+			 $dataForAdd = $this->fillDefaultValues($ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
+			
+			 // Add some values
+			 $dataForAdd['lang'] = $this->getLang();
+			
+			 // Add record
+			 $reqAdd = new ActionRequest($request);
+			 $reqAdd->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
+			 $reqAdd->params[Params::DATA] = $dataForAdd;
+			 //$reqAdd->dataWeb->request['called_from_operation'] = 'new_item';
+			 $dataAdd = $ctrl->run($reqAdd, $response);
+						
+			 // Html form
+			 $reqForm = new ActionRequest($request);
+			 $reqForm->params[Params::DATA] = $dataForAdd;
+			 $reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			 $reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
+			 $reqForm->params[ParamsConfig::EDITOR_ID] = $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY];
+			 return $this->opGetDefaultForm($reqForm, $response);
+			 */
+
+			$oAlias = @$request->dataWeb->request['object_alias'];
+			FTException::throwOnTrue(empty($oAlias), 'No alias');
+
+			FTException::throwOnTrue(@empty($request->dataWeb->request['form_submitted']), 'Only http req-s allowed');
+
+			$ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
+
+			// Get parent
+			$reqParent = new ActionRequest($request);
+			$reqParent->params[Params::ALIAS] = $oAlias;
+			$reqParent->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
+			$reqParent->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+			$reqParent->params[ParamsSql::RESTRICTION_DATA][':lang'] = $this->getLang();
+			$dataParent = $ctrl->run($reqParent, $response);
+			FTException::throwOnTrue(!FTArrayUtils::checkData(@$dataParent), 'No parent record');
+
+			// Form data to process
+			$dataDecoded = array();
+
+			$formResultMessageColor = 'green';
+			$formResultMessageText = 'Данные сохранены успешно';
+			$formOperation = Params::OPERATION_UPDATE;
+
+			try
+			{
+				// Prepare data
+				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
+
+				// Check obligatory fields
+				$this->checkObligatoryFields($dataDecoded, $ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
+
+				$req = new ActionRequest($request);
+				$req->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
+				$req->params[Params::DATA] = $dataDecoded;
+				$req->params[Params::DATA]['_parent_id'] = $dataParent[0]['_id'];
+				$dataResult = $ctrl->run($req, $response);
+
+				FTException::throwOnTrue(!FTArrayUtils::checkData($dataResult), 'No record');
+
+				// Set alias
+				$request->params['object_alias'] = $oAlias;
+			}
+			catch (Exception $ex2)
+			{
+				FTException::saveEx($ex2);
+
+				$formResultMessageColor = 'red';
+				$formResultMessageText = 'Ошибка при сохранении данных:<div>' . $ex2->getMessage() . '</div>';
+				$formOperation = Params::OPERATION_ADD;
+			}
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $dataDecoded;
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			$reqForm->params[Params::OPERATION_NAME] = $formOperation;
+			$reqForm->params['form_result'] = '<div style="color:' . $formResultMessageColor . '; text-align:center; border:1px dotted ' . $formResultMessageColor . '; padding:3px;">' . $formResultMessageText . '</div>';
+			$reqForm->params[ParamsConfig::EDITOR_ID] = $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY];
+			//$reqForm->params['object_alias'] = $oAlias;
+			$reqForm->params['called_from_operation'] = 'new';
+			return $this->opGetDefaultForm($reqForm, $response);
 		}
 		catch (Exception $ex)
 		{

@@ -77,9 +77,11 @@ function doajaxContent(params, element)
 	if (element != null)
 	{
 		// Highlight item
-		$('a[class=treelink]').each(function(){
-			$(this).css("background-color","").css("border","");
-		});
+		if (element != 'is_not_change_bg'){
+			$('a[class=treelink]').each(function(){
+				$(this).css("background-color","").css("border","");
+			});
+		}
 		if (element != 'is_skip')
 			$(element).css("background-color","#FFFF99").css("border","1px solid #D8D8D8");
 	}

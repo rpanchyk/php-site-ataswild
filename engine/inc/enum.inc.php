@@ -37,7 +37,8 @@ class Params
 	const OPERATION_USER_LOGOUT = 'logout';
 	const OPERATION_GET_CONFIG = 'get_config';
 	const OPERATION_GET_BY_ALIAS = 'get_by_alias';
-
+	const OPERATION_GET_BY_ID = 'get_by_id';
+	
 	// Params
 	const ID = 'id';
 	const PARENT_ID = 'parent_id';
@@ -59,6 +60,7 @@ class Params
 class ParamsConfig
 {
 	const DATA_OBJECT = 'data_object';
+	const OBJECT_ATTACH_ENTITY = 'object_attach_entity';
 
 	const EDITOR_ID = 'editor_id';
 	const EDITOR_DEFAULT = 'default';
@@ -100,5 +102,7 @@ class ParamsSql
 	const GROUP_BY = 'group_by';
 	const HAVING = 'having';
 	const LIMIT = 'limit';
+	
 	const PROCEDURE = 'procedure';
+	const CUSTOM_TABLE_NAME = 'custom_table_name';
 }

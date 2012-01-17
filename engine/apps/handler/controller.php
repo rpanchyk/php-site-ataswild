@@ -39,6 +39,8 @@ class HandlerController extends BaseController implements IHtmlable, IJsonable
 		}
 		catch (Exception $ex)
 		{
+			FTException::saveEx($ex);
+			
 			if (!@$request->params[ParamsMvc::IS_NOT_RENDER])
 			{
 				global $engineConfig;

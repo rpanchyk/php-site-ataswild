@@ -131,7 +131,18 @@ class FTException extends Exception
 		try
 		{
 			if ($condition)
-				throw new FTException($errorMessage, $errorCode);
+			{
+				// Keep info about caller, but not this method
+				$backtrace = debug_backtrace();
+
+				// Create ex and fill params
+				$exception = new Exception($errorMessage, $errorCode);
+				$exception->file = $backtrace[0]['file'];
+				$exception->line = $backtrace[0]['line'];
+
+				throw $exception;
+				//throw new FTException($errorMessage, $errorCode);
+			}
 		}
 		catch (Exception $ex)
 		{
