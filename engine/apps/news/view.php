@@ -12,7 +12,10 @@ class NewsView extends BaseView
 
 			$strResult = '';
 			foreach ($data4render as $row)
+			{
+				$row['date_pub'] = date('d/m/Y', strtotime($row['date_pub']));
 				$strResult .= parent::render($data['template'], $row);
+			}
 			return $strResult;
 		}
 		catch (Exception $ex)
