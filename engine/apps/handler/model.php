@@ -577,8 +577,13 @@ class HandlerModel extends BaseModel
 									$strTextareaIds .= (!empty($strTextareaIds) ? ',' : '') . '\'' . $k . '\'';
 								}
 								break;
+							case 'datetime':
+								{
+									$res .= '<input class="ft_control" type="' . (@$v['is_hidden'] ? 'hidden' : 'text') . '" id="' . $k . '" name="' . $k . '" value="' . (isset($data[$k]) && !(isset($v['is_hide_value']) && $v['is_hide_value']) ? $data[$k] : '') . '" size="19" maxlength="19"' . (isset($v['is_readonly']) && $v['is_readonly'] ? ' readonly="readonly"' : '') . ' style="width:20%;' . $strStyleReadOnly . '" />'.' (Формат: "YYYY-MM-DD hh:mm:ss")';
+								}
+								break;
 							default:
-								throw new Exception('Not implemented editor field type');
+								throw new Exception('Not implemented editor field type: '.$v['type']);
 								break;
 						}
 					$res .= '</td>';
@@ -856,6 +861,10 @@ class HandlerModel extends BaseModel
 				// Prepare data
 				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
 
+				// Set date
+				if (empty($dataDecoded['date_pub']))
+					$dataDecoded['date_pub'] = date('Y-m-d H:i:s', time());
+				
 				// Check obligatory fields
 				$this->checkObligatoryFields($dataDecoded, $ctrl);
 
@@ -1045,7 +1054,11 @@ class HandlerModel extends BaseModel
 			{
 				// Prepare data
 				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
-
+				
+				// Set date
+				if (empty($dataDecoded['date_pub']))
+					$dataDecoded['date_pub'] = date('Y-m-d H:i:s', time());
+					
 				// Check obligatory fields
 				$this->checkObligatoryFields($dataDecoded, $ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
 
@@ -1077,7 +1090,7 @@ class HandlerModel extends BaseModel
 			$reqForm->params['form_result'] = '<div style="color:' . $formResultMessageColor . '; text-align:center; border:1px dotted ' . $formResultMessageColor . '; padding:3px;">' . $formResultMessageText . '</div>';
 			$reqForm->params[ParamsConfig::EDITOR_ID] = $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY];
 			//$reqForm->params['object_alias'] = $oAlias;
-			$reqForm->params['called_from_operation'] = 'new';
+			$reqForm->params['object_operation'] = 'new';
 			return $this->opGetDefaultForm($reqForm, $response);
 		}
 		catch (Exception $ex)

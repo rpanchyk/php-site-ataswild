@@ -30,6 +30,10 @@ class NewsModel extends BaseModel
 				return $data;
 			}
 
+			$req = new ActionRequest($request, FALSE);
+			$req->params[Params::ID] = $data[0]['_id'];
+			$data[0][ParamsConfig::OBJECT_ATTACH_ENTITY] = $this->opGetItemsForSite($req, $response);
+
 			return $data;
 		}
 		catch (Exception $ex)
@@ -45,7 +49,7 @@ class NewsModel extends BaseModel
 			if (@$request->dataWeb->request['called_from_operation'] == 'new')
 			{
 				$request->params[ParamsSql::CUSTOM_TABLE_NAME] = $this->m_Controller->config[ParamsConfig::OBJECT_ATTACH_ENTITY];
-				$request->params[Params::DATA]['date_create'] = date('Y-m-d H:i:s', time());
+				$request->params[Params::DATA]['_date_create'] = date('Y-m-d H:i:s', time());
 			}
 			return parent::opAdd($request, $response);
 		}
@@ -62,7 +66,7 @@ class NewsModel extends BaseModel
 			if (@$request->dataWeb->request['called_from_operation'] == 'get_item_by_id')
 			{
 				$request->params[ParamsSql::CUSTOM_TABLE_NAME] = $this->m_Controller->config[ParamsConfig::OBJECT_ATTACH_ENTITY];
-				$request->params[Params::DATA]['date_modify'] = date('Y-m-d H:i:s', time());
+				$request->params[Params::DATA]['_date_modify'] = date('Y-m-d H:i:s', time());
 			}
 			return parent::opUpdate($request, $response);
 		}
@@ -178,6 +182,25 @@ class NewsModel extends BaseModel
 					$config['editor'][$editorID]['fields'][$k] = array_merge($config['editor'][$editorID]['fields'][$k], $dataTableMeta[$k]);
 
 			return $config;
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+
+	protected function opGetItemsForSite(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			FTException::throwOnTrue(!isset($request->params[Params::ID]), 'No ' . Params::ID);
+
+			$req = new ActionRequest($request);
+			$req->params[ParamsSql::CUSTOM_TABLE_NAME] = $this->m_Controller->config['object_attach_entity'];
+			$req->params[ParamsSql::RESTRICTION] = '_parent_id=:_parent_id AND is_active=1';
+			$req->params[ParamsSql::RESTRICTION_DATA][':_parent_id'] = $request->params[Params::ID];
+			$req->params[ParamsSql::ORDER_BY] = '_date_create';
+			return parent::opGet($req, $response);
 		}
 		catch (Exception $ex)
 		{
