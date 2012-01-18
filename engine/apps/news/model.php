@@ -199,7 +199,7 @@ class NewsModel extends BaseModel
 			$req->params[ParamsSql::CUSTOM_TABLE_NAME] = $this->m_Controller->config['object_attach_entity'];
 			$req->params[ParamsSql::RESTRICTION] = '_parent_id=:_parent_id AND is_active=1';
 			$req->params[ParamsSql::RESTRICTION_DATA][':_parent_id'] = $request->params[Params::ID];
-			$req->params[ParamsSql::ORDER_BY] = '_date_create';
+			$req->params[ParamsSql::ORDER_BY] = 'date_pub DESC';
 			return parent::opGet($req, $response);
 		}
 		catch (Exception $ex)
