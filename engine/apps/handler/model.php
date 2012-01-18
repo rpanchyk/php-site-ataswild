@@ -915,7 +915,7 @@ class HandlerModel extends BaseModel
 			// Add lang restriction
 			$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';
 			$req->params[ParamsSql::RESTRICTION_DATA][':lang'] = $this->getLang();
-			$req->params[ParamsSql::ORDER_BY] = '_id DESC';
+			$req->params[ParamsSql::ORDER_BY] = $ctrl->config['list_order'];
 
 			$data = $ctrl->run($req, $response);
 

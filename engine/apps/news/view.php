@@ -13,8 +13,14 @@ class NewsView extends BaseView
 			$strResult = '';
 			foreach ($data4render as $row)
 			{
+				// Change tpl, if need
+				$tplSuffix = $row['is_important'] === '0' ? '' : '_important';
+
+				// Change data
 				$row['date_pub'] = date('d/m/Y', strtotime($row['date_pub']));
-				$strResult .= parent::render($data['template'], $row);
+
+				// Make render
+				$strResult .= parent::render($data['template'] . $tplSuffix, $row);
 			}
 			return $strResult;
 		}
