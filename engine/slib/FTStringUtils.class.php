@@ -207,7 +207,7 @@ class FTStringUtils extends FTFireTrot
 			{
 				$res = array();
 				foreach ($object as $entryKey => $entryValue)
-					$res[$entryKey] = self::addSlashes($entryValue);
+					$res[$entryKey] = self::stripSlashes($entryValue);
 				return $res;
 			}
 			elseif (is_string($object))
