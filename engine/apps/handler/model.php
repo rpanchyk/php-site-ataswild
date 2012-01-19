@@ -1099,6 +1099,121 @@ class HandlerModel extends BaseModel
 		}
 	}
 
+	protected function opGalleryGet(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			$oAlias = @$request->dataWeb->request['object_alias'];
+			FTException::throwOnTrue(empty($oAlias), 'No alias');
+
+			global $engineConfig;
+
+			// Process 4 lang
+			// 1 - get by alias and lang
+			// 2 - if no => create default record
+
+			$ctrl = MvcFactory::create('gallery', ParamsMvc::ENTITY_CONTROLLER);
+			$req = new ActionRequest($request);
+			$req->params[Params::ALIAS] = $oAlias;
+			$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
+
+			// Add lang restriction
+			$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';
+			$req->params[ParamsSql::RESTRICTION_DATA][':lang'] = $this->getLang();
+
+			$data = $ctrl->run($req, $response);
+
+			//FTException::throwOnTrue(!FTArrayUtils::checkData(@$data[0]), 'No data');
+
+			if (!FTArrayUtils::checkData($data))
+			{
+				// Get default data
+				$dataForAdd = $this->fillDefaultValues($ctrl, ParamsConfig::EDITOR_DEFAULT);
+
+				// Add some values
+				$dataForAdd['alias'] = $oAlias;
+				$dataForAdd['lang'] = $this->getLang();
+
+				// Add record
+				$reqAdd = new ActionRequest($request);
+				$reqAdd->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
+				$reqAdd->params[Params::DATA] = $dataForAdd;
+				$dataAdd = $ctrl->run($reqAdd, $response);
+
+				// Check
+				FTException::throwOnTrue(!FTArrayUtils::checkData($dataAdd), 'Cannot add app.alias: ' . $request->dataWeb->request['object_app'] . '.' . $oAlias);
+
+				// Put data
+				$data[0] = $dataAdd[0];
+			}
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $data[0];
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+			return $this->opGetDefaultForm($reqForm, $response);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+protected function opGalleryUpdate(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			FTException::throwOnTrue(@empty($request->dataWeb->request['form_submitted']), 'Only http req-s allowed');
+			FTException::throwOnTrue(@empty($request->params['object_alias']), 'No alias');
+
+			$ctrl = MvcFactory::create('gallery', ParamsMvc::ENTITY_CONTROLLER);
+
+			// Form data to process
+			$dataDecoded = array();
+
+			$formResultMessageColor = 'green';
+			$formResultMessageText = 'Данные сохранены успешно';
+
+			try
+			{
+				// Prepare data
+				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl);
+
+				// Check obligatory fields
+				$this->checkObligatoryFields($dataDecoded, $ctrl);
+
+				$req = new ActionRequest($request);
+				$req->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+				$req->params[ParamsSql::RESTRICTION] = 'alias=\'' . $request->dataWeb->request['object_alias'] . '\'';
+
+				// Add lang restriction
+				$req->params[ParamsSql::RESTRICTION] .= ' AND lang=' . $this->getLang(TRUE);
+
+				$req->params[Params::DATA] = $dataDecoded;
+				$dataResult = $ctrl->run($req, $response);
+
+				FTException::throwOnTrue(!FTArrayUtils::checkData($dataResult), 'No record');
+			}
+			catch (Exception $ex2)
+			{
+				$formResultMessageColor = 'red';
+				$formResultMessageText = 'Ошибка при сохранении данных:<div>' . $ex2->getMessage() . '</div>';
+			}
+
+			// Html form
+			$reqForm = new ActionRequest($request);
+			$reqForm->params[Params::DATA] = $dataDecoded;
+			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
+			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
+			$reqForm->params['form_result'] = '<div style="color:' . $formResultMessageColor . '; text-align:center; border:1px dotted ' . $formResultMessageColor . '; padding:3px;">' . $formResultMessageText . '</div>';
+			return $this->opGetDefaultForm($reqForm, $response);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+	
 	private function prepareHttpData($dataInput, $ctrl, $editorID = ParamsConfig::EDITOR_DEFAULT)
 	{
 		try
