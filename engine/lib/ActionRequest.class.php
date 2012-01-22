@@ -9,28 +9,25 @@ class ActionRequest extends FTFireTrot
 	public $db;
 	public $dataWeb;
 	public $dataMvc;
-	//public $user;
-
 	public $params;
 
-	public function __construct($request, $bIsShiftParams = TRUE)
+	public function __construct(ActionRequest $request = NULL, $bIsShiftParams = TRUE, $isWebDataShiftGlobals = TRUE, $isWebDataRemoveGlobals = TRUE)
 	{
 		try
 		{
 			global $engineConfig;
 
 			// Set up database connector
-			$this->db = $request != NULL ? $request->db : new DatabaseDriver($engineConfig['database']['type'], $engineConfig['database']['host'], $engineConfig['database']['port'], $engineConfig['database']['name'], $engineConfig['database']['username'], $engineConfig['database']['password'], array(), $engineConfig['database']['cache_dir'], $engineConfig['database']['cache_ttl']);
+			$this->db = !is_null($request) ? $request->db : new DatabaseDriver($engineConfig['database']['type'], $engineConfig['database']['host'], $engineConfig['database']['port'], $engineConfig['database']['name'], $engineConfig['database']['username'], $engineConfig['database']['password'], array(), $engineConfig['database']['cache_dir'], $engineConfig['database']['cache_ttl']);
 
-			// Get web data
-			$this->dataWeb = $request != NULL ? $request->dataWeb : WebData::getInstance($engineConfig['web_data']['super_globals'], TRUE);
+			// Set web data
+			$this->dataWeb = !is_null($request) ? $request->dataWeb : WebData::getInstance($engineConfig['web_data']['super_globals'], $isWebDataShiftGlobals, $isWebDataRemoveGlobals);
 
-			// Get mvc data
-			$this->dataMvc = $request != NULL ? $request->dataMvc : MvcData::getInstance(@$this->dataWeb->request['url'], $engineConfig['mvc_data']['lang_default'], 'html', $engineConfig['mvc_data']['app_alias_default'], $engineConfig['mvc_data']['app_operation_default'], $engineConfig['mvc_data']['langs'], $engineConfig['mvc_data']['formatters'], array(), $this->db); //, $engineConfig['mvc_data']['allowed_webaccess_apps']);
+			// Set mvc data
+			$this->dataMvc = !is_null($request) ? $request->dataMvc : MvcData::getInstance(@$this->dataWeb->request['url'], $engineConfig['mvc_data']['lang_default'], 'html', $engineConfig['mvc_data']['app_alias_default'], $engineConfig['mvc_data']['app_operation_default'], $engineConfig['mvc_data']['langs'], $engineConfig['mvc_data']['formatters'], array(), $this->db); //, $engineConfig['mvc_data']['allowed_webaccess_apps']);
 
 			// Shift params
-			if ($bIsShiftParams && isset($request->params))
-				$this->params = $request->params;
+			$this->params = !is_null($request) && $bIsShiftParams ? $request->params : array();
 		}
 		catch (Exception $ex)
 		{

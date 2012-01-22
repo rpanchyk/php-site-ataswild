@@ -11,10 +11,10 @@ class WebData
 	/**
 	 * Get WebData object
 	 */
-	static public function getInstance($aSuperGlobals = array(), $bISecureData = TRUE)
+	static public function getInstance(Array $aSuperGlobals, $isShiftGlobals = TRUE, $isRemoveGlobals = TRUE)
 	{
-		if (self::$instance == NULL)
-			self::$instance = new self($aSuperGlobals, $bISecureData);
+		if (is_null(self::$instance))
+			self::$instance = new self($aSuperGlobals, $isShiftGlobals, $isRemoveGlobals);
 
 		return self::$instance;
 	}
@@ -22,12 +22,15 @@ class WebData
 	/**
 	 * Hidden constructor
 	 */
-	protected function __construct($aSuperGlobals = array(), $bISecureData = TRUE)
+	protected function __construct(Array $aSuperGlobals, $isShiftGlobals = TRUE, $isRemoveGlobals = TRUE)
 	{
 		try
 		{
-			if ($bISecureData)
-				$this->secureWebData($aSuperGlobals);
+			if ($isShiftGlobals)
+				$this->shiftGlobals($aSuperGlobals, TRUE);
+
+			if ($isRemoveGlobals)
+				$this->removeGlobals($aSuperGlobals);
 		}
 		catch (Exception $ex)
 		{
@@ -36,26 +39,7 @@ class WebData
 	}
 
 	/**
-	 * Move global variables to WebData object
-	 */
-	protected function secureWebData($aSuperGlobals)
-	{
-		try
-		{
-			if (!is_array($aSuperGlobals) || count($aSuperGlobals) == 0)
-				return;
-
-			$this->shiftGlobals($aSuperGlobals, TRUE);
-			$this->removeGlobals($aSuperGlobals);
-		}
-		catch (Exception $ex)
-		{
-			throw $ex;
-		}
-	}
-
-	/**
-	 * Shift params from globals to local variables
+	 * Shift params from GLOBAL to object variables
 	 */
 	protected function shiftGlobals($aSuperGlobals, $bIsMakeSafety = FALSE)
 	{
