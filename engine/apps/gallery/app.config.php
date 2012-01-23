@@ -1,7 +1,12 @@
 <?php
 require_once dirname(__FILE__) . '/../../inc/cde.inc.php';
 
+global $engineConfig;
+
 $config = array();
+
+$config['upload_path'] = FTFileSystem::pathCombine(UPLOAD_PATH, 'gallery');
+$config['web_path'] = $engineConfig['out_data']['upload_web_path'] . '/gallery';
 
 $config['editor']['default']['fields'] = array(
 	'_id' => array('is_readonly' => '1', 'is_hidden' => '1'),

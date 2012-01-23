@@ -39,8 +39,10 @@ $engineConfig['mvc_data']['app_operation_default'] = 'get';
 
 $engineConfig['cookie']['name_lang'] = 'ftlng';
 
+$engineConfig['out_data']['root_web_path'] = '';
+$engineConfig['out_data']['upload_web_path'] = $engineConfig['out_data']['root_web_path'] . '/' . basename(VAR_PATH) . '/' . basename(UPLOAD_PATH);
 $engineConfig['out_data']['template'] = 'Default';
-$engineConfig['out_data']['web_path'] = '/public/template/' . $engineConfig['out_data']['template'];
+$engineConfig['out_data']['web_path'] = $engineConfig['out_data']['root_web_path'] . '/public/template/' . $engineConfig['out_data']['template'];
 
 $engineConfig['smtp']['is_use_internal_server'] = FALSE;
 $engineConfig['smtp']['server_host'] = 'smtp.freenet.com.ua';

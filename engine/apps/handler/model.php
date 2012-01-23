@@ -570,20 +570,70 @@ class HandlerModel extends BaseModel
 								}
 								break;
 							case 'text':
-								$res .= '<textarea class="ft_control" rows="17" id="' . $k . '" name="' . $k . '" maxlength="1000000"' . (@$v['is_readonly'] ? ' readonly="readonly"' : '') . ' style="width:100%;' . $strStyleReadOnly . '">' . (isset($data[$k]) ? $data[$k] : '') . '</textarea>';
+								$bIsAddTextArea = TRUE;
 								if (@$v['rich_editor'])
 								{
 									$res .= '<script type="text/javascript">bindEditorFull(\'' . $k . '\');</script>';
 									$strTextareaIds .= (!empty($strTextareaIds) ? ',' : '') . '\'' . $k . '\'';
 								}
+								elseif (@$v['gallery_editor'])
+								{
+									$bIsAddTextArea = FALSE;
+									// http://valums.com/ajax-upload/
+									$res .= '<script type="text/javascript">';
+									$res .= '	$(function(){';
+									$res .= '		var btnUpload = $("#btn_upload");';
+									$res .= '		var status = $("#status_upload");';
+									$res .= '		new AjaxUpload(btnUpload, {';
+									$res .= '			action: "' . $this->m_Controller->config['web_path'] . '",';
+									$res .= '			name: "item",';
+									$res .= '			data: { object_app:"gallery",';
+									$res .= '			object_alias:"' . $request->params['object_alias'] . '",';
+									$res .= '			object_operation:"upload_item" },';
+									$res .= '			onSubmit: function(file, ext){';
+									$res .= '				 if (! (ext && /^(jpg|png|jpeg|gif)$/.test(ext)) ){';
+									$res .= '					status.text("Only JPG, PNG or GIF files are allowed");';
+									$res .= '				return false;';
+									$res .= '				}';
+									$res .= '				status.text("Идет загрузка, подождите...");';
+									$res .= '			},';
+									$res .= '			onComplete: function(file, response){';
+									$res .= '				status.text("");';
+									$res .= '				if(response == "error"){';
+									$res .= '					status.text("Upload ERROR");';
+									$res .= '				}else{';
+									$res .= '					$("#' . $k . '").append("<li><img src=\"" + response + "\" border=\"0\" /></li>");';
+									$res .= '				}';
+									$res .= '			}';
+									$res .= '		});';
+									$res .= '	});';
+									$res .= '</script>';
+									$res .= '<div id="btn_upload" style="float:left; padding:0 8px 0 8px; background-color:#ccc; border:1px solid grey; font-size:12px; line-height:16px;"><span>Загрузить изображение<span></div><span id="status_upload" style="padding-left:10px; color:#444;"></span>';
+
+									$res .= '	<style>';
+									$res .= '	#' . $k . ' { list-style-type:none; margin:0; padding:5px; height:300px; width:99%; border:1px solid grey; }';
+									$res .= '	#' . $k . ' li { margin:3px 3px 3px 0; padding:1px; float:left; width:100px; height:90px; text-align:center; overflow:hidden; border:1px solid #D3D3D3; }';
+									$res .= '	</style>';
+									$res .= '	<script>';
+									$res .= '	$(function() {';
+									$res .= '		$( "#' . $k . '" ).sortable();';
+									$res .= '		$( "#' . $k . '" ).disableSelection();';
+									$res .= '	});';
+									$res .= '	</script>';
+									$res .= '<div style=""><ul id="' . $k . '" class="ui-sortable"></ul></div>';
+								}
+
+								// Add textarea
+								if ($bIsAddTextArea)
+									$res .= '<textarea class="ft_control" rows="17" id="' . $k . '" name="' . $k . '" maxlength="1000000"' . (@$v['is_readonly'] ? ' readonly="readonly"' : '') . ' style="width:100%;' . $strStyleReadOnly . '">' . (isset($data[$k]) ? $data[$k] : '') . '</textarea>';
 								break;
 							case 'datetime':
 								{
-									$res .= '<input class="ft_control" type="' . (@$v['is_hidden'] ? 'hidden' : 'text') . '" id="' . $k . '" name="' . $k . '" value="' . (isset($data[$k]) && !(isset($v['is_hide_value']) && $v['is_hide_value']) ? $data[$k] : '') . '" size="19" maxlength="19"' . (isset($v['is_readonly']) && $v['is_readonly'] ? ' readonly="readonly"' : '') . ' style="width:20%;' . $strStyleReadOnly . '" />'.' (Формат: "YYYY-MM-DD hh:mm:ss")';
+									$res .= '<input class="ft_control" type="' . (@$v['is_hidden'] ? 'hidden' : 'text') . '" id="' . $k . '" name="' . $k . '" value="' . (isset($data[$k]) && !(isset($v['is_hide_value']) && $v['is_hide_value']) ? $data[$k] : '') . '" size="19" maxlength="19"' . (isset($v['is_readonly']) && $v['is_readonly'] ? ' readonly="readonly"' : '') . ' style="width:20%;' . $strStyleReadOnly . '" />' . ' (Формат: "YYYY-MM-DD hh:mm:ss")';
 								}
 								break;
 							default:
-								throw new Exception('Not implemented editor field type: '.$v['type']);
+								throw new Exception('Not implemented editor field type: ' . $v['type']);
 								break;
 						}
 					$res .= '</td>';
@@ -595,7 +645,6 @@ class HandlerModel extends BaseModel
 
 				$res .= '<input type="hidden" name="object_app" value="' . $request->params['object_app'] . '" />';
 				$res .= '<input type="hidden" name="object_operation" value="' . $request->params[Params::OPERATION_NAME] . '" />';
-
 				$res .= '<input type="hidden" name="called_from_operation" value="' . $request->params['object_operation'] . '" />';
 
 				if (isset($request->params['object_alias']))
@@ -692,6 +741,68 @@ class HandlerModel extends BaseModel
 			}
 
 			return $res;
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+
+	protected function opGetGalleryUploadForm(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			FTException::throwOnTrue(!isset($request->params['object_app']), 'No app');
+			FTException::throwOnTrue(!isset($request->params[Params::OPERATION_NAME]), 'No ' . Params::OPERATION_NAME);
+			FTException::throwOnTrue(!isset($request->params['object_alias']), 'No object_alias');
+			//FTException::throwOnTrue(!isset($request->params['called_from_operation']), 'No called_from_operation');
+
+			// Result html
+			$html = '';
+
+			$html .= '<script type="text/javascript">';
+			$html .= 'function doajaxUploadFile(element){';
+			//$html .= 'alert( $("#file").val() );';
+			$html .= '	$.ajax({';
+			$html .= '		type: "POST",';
+			$html .= '		url: "' . $this->m_Controller->config['web_path'] . '",';
+			$html .= '		enctype: "multipart/form-data",';
+			$html .= '		data: $("form#formGalleryUpload input"),';
+			$html .= '		success: function(data) {';
+			$html .= '			$("#form_result_gallery_upload").html(data);';
+			$html .= '		},';
+			$html .= '		error: function(jqXHR, textStatus, errorThrown) {';
+			$html .= '			alert(textStatus + ": " + errorThrown);';
+			$html .= '		}';
+			$html .= '	});';
+			$html .= '}';
+			$html .= '</script>';
+
+			$html .= '<form id="formGalleryUpload" action="' . $this->m_Controller->config['web_path'] . '" method="POST" enctype="multipart/form-data">';
+
+			$html .= '<div style="border:1px solid grey; padding:5px; vertical-align:middle;">';
+			$html .= '<table border="0" cellpadding="0" cellspacing="0" style="width:95%; font:14px Verdana;"><tbody>';
+			$html .= '<tr>';
+			$html .= '<td style="width:24%;">Загрузить файлы:</td>';
+			$html .= '<td><input id="file" type="file" multiple="multiple" onchange="doajaxUploadFile(this.form)" name="upload_items[]"></td>';
+			$html .= '</tr>';
+			$html .= '</tbody></table>';
+			$html .= '</div>';
+
+			//$html .= '<input type="hidden" value="images/gallery" name="dir">';
+
+			// System info
+			$html .= '<input type="hidden" name="object_app" value="' . $request->params['object_app'] . '" />';
+			$html .= '<input type="hidden" name="object_alias" value="' . $request->params['object_alias'] . '" />';
+			$html .= '<input type="hidden" name="object_operation" value="' . $request->params[Params::OPERATION_NAME] . '" />';
+			//$html .= '<input type="hidden" name="called_from_operation" value="' . $request->params['object_operation'] . '" />';
+
+			$html .= '</form>';
+
+			// Show result
+			$html .= '<div id="form_result_gallery_upload"></div>';
+
+			return $html;
 		}
 		catch (Exception $ex)
 		{
@@ -864,7 +975,7 @@ class HandlerModel extends BaseModel
 				// Set date
 				if (empty($dataDecoded['date_pub']))
 					$dataDecoded['date_pub'] = date('Y-m-d H:i:s', time());
-				
+
 				// Check obligatory fields
 				$this->checkObligatoryFields($dataDecoded, $ctrl);
 
@@ -1002,22 +1113,22 @@ class HandlerModel extends BaseModel
 		{
 			/*
 			 FTException::throwOnTrue(@empty($request->dataWeb->request['form_submitted']), 'Only http req-s allowed');
-						
+																					
 			 $ctrl = MvcFactory::create('news', ParamsMvc::ENTITY_CONTROLLER);
-			
+																		
 			 // Get default data
 			 $dataForAdd = $this->fillDefaultValues($ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
-			
+																		
 			 // Add some values
 			 $dataForAdd['lang'] = $this->getLang();
-			
+																		
 			 // Add record
 			 $reqAdd = new ActionRequest($request);
 			 $reqAdd->params[Params::OPERATION_NAME] = Params::OPERATION_ADD;
 			 $reqAdd->params[Params::DATA] = $dataForAdd;
 			 //$reqAdd->dataWeb->request['called_from_operation'] = 'new_item';
 			 $dataAdd = $ctrl->run($reqAdd, $response);
-						
+																					
 			 // Html form
 			 $reqForm = new ActionRequest($request);
 			 $reqForm->params[Params::DATA] = $dataForAdd;
@@ -1054,11 +1165,11 @@ class HandlerModel extends BaseModel
 			{
 				// Prepare data
 				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
-				
+
 				// Set date
 				if (empty($dataDecoded['date_pub']))
 					$dataDecoded['date_pub'] = date('Y-m-d H:i:s', time());
-					
+
 				// Check obligatory fields
 				$this->checkObligatoryFields($dataDecoded, $ctrl, $ctrl->config[ParamsConfig::OBJECT_ATTACH_ENTITY]);
 
@@ -1147,19 +1258,29 @@ class HandlerModel extends BaseModel
 				$data[0] = $dataAdd[0];
 			}
 
+			$html = '';
+
 			// Html form
 			$reqForm = new ActionRequest($request);
 			$reqForm->params[Params::DATA] = $data[0];
 			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
 			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
-			return $this->opGetDefaultForm($reqForm, $response);
+			$html .= $this->opGetDefaultForm($reqForm, $response);
+
+			$reqGUForm = new ActionRequest($request, FALSE);
+			$reqGUForm->params['object_app'] = 'gallery';
+			$reqGUForm->params[Params::OPERATION_NAME] = 'upload_items';
+			$reqGUForm->params['object_alias'] = $oAlias;
+			//$html .= $this->opGetGalleryUploadForm($reqGUForm, $response);
+
+			return $html;
 		}
 		catch (Exception $ex)
 		{
 			throw $ex;
 		}
 	}
-protected function opGalleryUpdate(ActionRequest & $request, ActionResponse & $response)
+	protected function opGalleryUpdate(ActionRequest & $request, ActionResponse & $response)
 	{
 		try
 		{
@@ -1200,20 +1321,56 @@ protected function opGalleryUpdate(ActionRequest & $request, ActionResponse & $r
 				$formResultMessageText = 'Ошибка при сохранении данных:<div>' . $ex2->getMessage() . '</div>';
 			}
 
+			$html = '';
+
 			// Html form
 			$reqForm = new ActionRequest($request);
 			$reqForm->params[Params::DATA] = $dataDecoded;
 			$reqForm->params[ParamsMvc::ENTITY_CONTROLLER] = $ctrl;
 			$reqForm->params[Params::OPERATION_NAME] = Params::OPERATION_UPDATE;
 			$reqForm->params['form_result'] = '<div style="color:' . $formResultMessageColor . '; text-align:center; border:1px dotted ' . $formResultMessageColor . '; padding:3px;">' . $formResultMessageText . '</div>';
-			return $this->opGetDefaultForm($reqForm, $response);
+			$html .= $this->opGetDefaultForm($reqForm, $response);
+
+			$reqGUForm = new ActionRequest($request);
+			//$html .= $this->opGetGalleryUploadForm($reqGUForm, $response);
+
+			return $html;
 		}
 		catch (Exception $ex)
 		{
 			throw $ex;
 		}
 	}
-	
+	protected function opGalleryUploadItem(ActionRequest & $request, ActionResponse & $response)
+	{
+		try
+		{
+			$oAlias = @$request->dataWeb->request['object_alias'];
+			FTException::throwOnTrue(empty($oAlias), 'No alias');
+
+			$ctrl = MvcFactory::create('gallery', ParamsMvc::ENTITY_CONTROLLER);
+
+			// Get filpath
+			$file = FTFileSystem::pathCombine($ctrl->config['upload_path'], $oAlias, basename($request->dataWeb->files['item']['name']));
+
+			// Make dirs
+			FTCore::createDirs(array($ctrl->config['upload_path'], dirname($file)));
+
+			// Make upload
+			if (!move_uploaded_file(stripslashes($request->dataWeb->files['item']['tmp_name']), $file))
+				return 'error';
+			
+			// So, we have original & now, make a preview
+			// @todo - resize.
+
+			return $ctrl->config['web_path'] . '/' . $oAlias . '/' . basename($file);
+		}
+		catch (Exception $ex)
+		{
+			throw $ex;
+		}
+	}
+
 	private function prepareHttpData($dataInput, $ctrl, $editorID = ParamsConfig::EDITOR_DEFAULT)
 	{
 		try

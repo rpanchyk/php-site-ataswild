@@ -15,6 +15,7 @@ $dataAuth = $user->run($reqAuth, $response);
 // Send buffer and turn off output buffering
 @ob_end_flush();
 ?>
+<!DOCTYPE html>
 <html>
 <head>
 
@@ -40,6 +41,7 @@ $dataAuth = $user->run($reqAuth, $response);
 <script type="text/javascript" src="js/webtoolkit.url.js"></script>
 <script type="text/javascript" src="../engine/editor/ckeditor_3.6.2/ckeditor.js"></script>
 <script type="text/javascript" src="js/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/ajaxupload.js"></script>
 
 <script type="text/javascript">
 $(document).ready(function () {
@@ -100,10 +102,13 @@ function doajaxContent(params, element)
 	});
 
 	// Set cookie - last content query
-	$.cookie("ftlcq", 
-		btoa(escape(params)), 
-		{ expires:365, path:"/", domain:"<?=$request->dataWeb->server['SERVER_NAME']?>" }
-	);
+	if (params != null && params != 'undefined' && params != '')
+	{
+		//$.cookie("ftlcq", 
+		//	btoa(escape(params)), 
+		//	{ expires:365, path:"/", domain:"<?=$request->dataWeb->server['SERVER_NAME']?>" }
+		//);
+	}
 }
 
 function doajaxTree()
@@ -258,6 +263,14 @@ function bindEditorFull(elementid)
 <style type="text/css">
 /* <![CDATA[ */
 
+html, body {
+	width:		100%;
+	height:		100%;					
+	padding:	0;
+	margin:		0;
+	overflow:	auto; /* when page gets too small */
+}
+
 .section {
 	width: 100%;
 	background: #EFEFEF;
@@ -306,12 +319,6 @@ a.treelink {
 	padding-right:3px;
 	cursor:pointer;
 }
-
-/* ]]> */
-</style>
-
-<style type="text/css">
-/* <![CDATA[ */
 
 input.ft_control, textarea.ft_control {
 	border:solid 1px #848388;
