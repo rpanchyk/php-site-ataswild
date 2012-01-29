@@ -220,4 +220,36 @@ class FTStringUtils extends FTFireTrot
 			throw $ex;
 		}
 	}
+
+	/**
+	 * Transforms the notation for numbers (like '2M')
+	 * to an integer (2*1024*1024 in this case)
+	 * @param string $string - input string
+	 */
+	static public function getConfigStringSizeInBytes($string)
+	{
+		// Get value, without last char
+		$ret = substr($string, 0, -1);
+
+		$lastLetter = substr($string, -1);
+		switch (strtoupper($lastLetter))
+		{
+			case 'P':
+				$ret *= 1024;
+			case 'T':
+				$ret *= 1024;
+			case 'G':
+				$ret *= 1024;
+			case 'M':
+				$ret *= 1024;
+			case 'K':
+				$ret *= 1024;
+				break;
+			default:
+				$ret = $string;
+				break;
+		}
+
+		return $ret;
+	}
 }

@@ -1412,9 +1412,16 @@ class HandlerModel extends BaseModel
 			$fileName = basename($request->dataWeb->files['item']['name']);
 			$filePath = FTFileSystem::pathCombine($galleryPathReal, $fileName);
 			
+			//echo ini_get('max_upload_size');
+			$maxUploadSize = min(FTStringUtils::getConfigStringSizeInBytes(ini_get('post_max_size')), FTStringUtils::getConfigStringSizeInBytes(ini_get('upload_max_filesize')));
+			FTException::throwOnTrue(intval($maxUploadSize) < intval($request->dataWeb->files['item']['size']), 'File too large'); 
+			
 			// Make upload
 			if (!move_uploaded_file(stripslashes($request->dataWeb->files['item']['tmp_name']), FTFileSystem::pathCombine($galleryPathReal, $fileName)))
+			{
+				@unlink($request->dataWeb->files['item']['tmp_name']);
 				return 'error';
+			}
 			
 			// So, we have original & now, make screen & preview images
 			FTImageUtils::cropImage($config['preview_width'], $config['preview_height'], $filePath, FTFileSystem::pathCombine($galleryPathPreview, $fileName));
