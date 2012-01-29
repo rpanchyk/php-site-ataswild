@@ -38,5 +38,8 @@ try
 }
 catch (Exception $ex)
 {
-	FTException::throwEx($ex);
+	if (!class_exists(FTException))
+		die($ex->getMessage());
+	else
+		FTException::throwEx($ex);
 }

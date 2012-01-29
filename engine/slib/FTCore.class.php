@@ -23,7 +23,8 @@ class FTCore extends FTFireTrot
 				throw new Exception('Newer PHP version required: ' . $engineConfig['requirements']['php_min_version'] . '. Current version: ' . PHP_VERSION);
 
 			// Check session started
-			FTException::throwOnTrue(session_id() === '', 'Session is not started');
+			if (session_id() === '')
+				throw new Exception('Session is not started');
 		}
 		catch (Exception $ex)
 		{
@@ -178,9 +179,11 @@ class FTCore extends FTFireTrot
 				if (file_exists($dir) && is_dir($dir))
 					continue;
 
-				FTException::throwOnTrue(!mkdir($dir), 'Cannot create dir: "' . $dir . '"');
+				if (!mkdir($dir))
+					throw new Exception('Cannot create dir: "' . $dir . '"');
 
-				FTException::throwOnTrue(!chmod($dir, 0666), 'Cannot chmod dir: "' . $dir . '"');
+				if (!chmod($dir, 0666))
+					throw new Exception('Cannot chmod dir: "' . $dir . '"');
 			}
 		}
 		catch (Exception $ex)

@@ -1,0 +1,27 @@
+<script type="text/javascript" src="/template/Default/html/js/jquery.js"></script>
+<script type="text/javascript" src="/template/Default/html/js/jquery.lightbox-0.5.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/template/Default/html/css/jquery.lightbox-0.5.css" media="screen" />
+
+<script type="text/javascript">
+	$(function() {
+		$('#{alias} a').lightBox();
+	});
+</script>
+
+<style type="text/css">
+#{alias} a {
+	padding:2px;
+}
+a #gallery_item_content {
+	border:1px solid green;
+}
+a:hover #gallery_item_content {
+	border:1px solid grey;
+}
+</style>
+
+<p>
+	<div style="font:bold 24px Courier New;">{name}</div>
+	<div id="{alias}">{content}</div>
+</p>

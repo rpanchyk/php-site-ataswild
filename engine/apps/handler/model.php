@@ -578,7 +578,9 @@ class HandlerModel extends BaseModel
 								}
 								elseif (@$v['gallery_editor'])
 								{
-									$bIsAddTextArea = FALSE;
+									//$bIsAddTextArea = FALSE;
+									$strStyleReadOnly = 'display:none;';
+									
 									// http://valums.com/ajax-upload/
 									$res .= '<script type="text/javascript">';
 									$res .= '	$(function(){';
@@ -602,17 +604,61 @@ class HandlerModel extends BaseModel
 									$res .= '				if(response == "error"){';
 									$res .= '					status.text("Upload ERROR");';
 									$res .= '				}else{';
-									$res .= '					$("#' . $k . '").append("<li><img src=\"" + response + "\" border=\"0\" /></li>");';
+									$res .= '					var newLi = "<li href=\"'.$ctrl->config['web_path'] . '/' . $request->params['object_alias'] . '/'. $ctrl->config['screen_dir_name'] . '/' .'" + response +"\"><img id=\"gallery_item_' . $k . '\" src=\"'.$ctrl->config['web_path'] . '/' . $request->params['object_alias'] . '/'. $ctrl->config['preview_dir_name'] . '/' .'" + response + "\" border=\"0\" onclick=\"getGalleryItem(this)\" style=\"width:100px; height:90px;\" /></li>";';
+									//$res .= '					$("#' . $k . '").each(function(){ alert( $(this).html() ); });';
+									$res .= '					if ($("ul#' . $k . '").html().indexOf(response) < 0)';
+									$res .= '						$("ul#' . $k . '").append(newLi);';
+									$res .= '					else {';
+									//$res .= '						var cnt = $("#' . $k . '").html();';
+									//$res .= '						$("#' . $k . '").html("");';
+									//$res .= '						$("#' . $k . '").html(cnt);';
+									$res .= '					}';
 									$res .= '				}';
 									$res .= '			}';
 									$res .= '		});';
+									$res .= '		/* For old items */';
+									$res .= '		$(\'img#gallery_item_' . $k . '\').click(function(){';
+									//$res .= '			alert("ww"); $("#gallery_pic_id").val( $(this).attr("src") );';
+									$res .= '			getGalleryItem(this);';
+									$res .= '			return false;';
+									$res .= '		});';
+									$res .= '		$(\'#gallery_pic_delete\').click(function(){';
+									$res .= '			if( $("#gallery_pic_id").val() == ""){ alert("Выберите изображение"); return; }';
+									$res .= '			$(\'img[id="gallery_item_' . $k . '"]\').each(function(){ if( $(this).attr("src") == $("#gallery_pic_id").val() ){ $(this).parent().remove(); $("#gallery_pic_id").val(""); } });';
+									//$res .= '			alert( $(\'#gallery_content[src="+$("#gallery_pic_id").val()+"]\').attr("id") );';
+									$res .= '			return false;';
+									$res .= '		});';
 									$res .= '	});';
+									$res .= '	/* For new items */';
+									$res .= '	function getGalleryItem(o){';
+									$res .= '		removeSelectionItem();';
+									$res .= '		$(o).parent().css("border", "1px dashed #777");';
+									$res .= '		$("#gallery_pic_id").val( $(o).attr("src") );';
+									//$res .= '		$("#gallery_pic_delete").removeAttr("disabled");';
+									//$res .= '		$("#gallery_pic_title").val( $(o).attr("title") );';
+									$res .= '		return false;';
+									$res .= '	}';
+									//$res .= '	function setItemTitle(o){';
+									//$res .= '		$("#gallery_item_' . $k . '").each(function(){ if( $(this).attr("src") == $("#gallery_pic_id").val() ){ $(this).attr("title", $(o).val()); } });';
+									//$res .= '	}';
+									//$res .= '	function disableDeleteItem(){';
+									//$res .= '		$("#gallery_pic_delete").attr("disabled", "disabled");';
+									//$res .= '	}';
+									$res .= '	function removeSelectionItem(){';
+									$res .= '		$(\'img[id="gallery_item_' . $k . '"]\').each(function(){ $(this).parent().css("border", ""); });';
+									$res .= '		return false;';
+									$res .= '	}';
 									$res .= '</script>';
 									$res .= '<div id="btn_upload" style="float:left; padding:0 8px 0 8px; background-color:#ccc; border:1px solid grey; font-size:12px; line-height:16px;"><span>Загрузить изображение<span></div><span id="status_upload" style="padding-left:10px; color:#444;"></span>';
-
+									//$res .= '<input type="text" id="gallery_pic_title" value="" onkeyup="setItemTitle(this)" class="ft_control" style="width:50%; margin:3px 3px 3px 0;" />';
+									$res .= '<div id="gallery_pic_delete" style="float:left; padding:0 8px 0 8px; background-color:#ccc; border:1px solid grey; font-size:12px; line-height:16px; margin-left:5px; cursor:pointer;"><span>Удалить изображение<span></div><span id="status_upload" style="padding-left:10px; color:#444;"></span>';
+									//$res .= '<input type="button" id="gallery_pic_delete" value="Удалить изображение" class="ft_control" />';
+									$res .= '<input type="hidden" id="gallery_pic_id" value="" class="ft_control" />';
+									
 									$res .= '	<style>';
 									$res .= '	#' . $k . ' { list-style-type:none; margin:0; padding:5px; height:300px; width:99%; border:1px solid grey; }';
 									$res .= '	#' . $k . ' li { margin:3px 3px 3px 0; padding:1px; float:left; width:100px; height:90px; text-align:center; overflow:hidden; border:1px solid #D3D3D3; }';
+									$res .= '	#' . $k . ' li { cursor:pointer; }';
 									$res .= '	</style>';
 									$res .= '	<script>';
 									$res .= '	$(function() {';
@@ -620,7 +666,7 @@ class HandlerModel extends BaseModel
 									$res .= '		$( "#' . $k . '" ).disableSelection();';
 									$res .= '	});';
 									$res .= '	</script>';
-									$res .= '<div style=""><ul id="' . $k . '" class="ui-sortable"></ul></div>';
+									$res .= '<div><ul id="' . $k . '" class="ui-sortable">'.@$data[$k].'</ul></div>';
 								}
 
 								// Add textarea
@@ -1349,21 +1395,30 @@ class HandlerModel extends BaseModel
 			FTException::throwOnTrue(empty($oAlias), 'No alias');
 
 			$ctrl = MvcFactory::create('gallery', ParamsMvc::ENTITY_CONTROLLER);
+			$config = $ctrl->config;
 
-			// Get filpath
-			$file = FTFileSystem::pathCombine($ctrl->config['upload_path'], $oAlias, basename($request->dataWeb->files['item']['name']));
-
+			$galleryPath = FTFileSystem::pathCombine($ctrl->config['upload_path'], $oAlias);
+			$galleryPathReal = FTFileSystem::pathCombine($galleryPath, $config['real_dir_name']);
+			$galleryPathScreen = FTFileSystem::pathCombine($galleryPath, $config['screen_dir_name']);
+			$galleryPathPreview = FTFileSystem::pathCombine($galleryPath, $config['preview_dir_name']);
+									
 			// Make dirs
-			FTCore::createDirs(array($ctrl->config['upload_path'], dirname($file)));
+			FTCore::createDirs(array($galleryPath, $galleryPathReal, $galleryPathScreen, $galleryPathPreview));
 
+			// Get file name & path
+			$fileName = basename($request->dataWeb->files['item']['name']);
+			$filePath = FTFileSystem::pathCombine($galleryPathReal, $fileName);
+			
 			// Make upload
-			if (!move_uploaded_file(stripslashes($request->dataWeb->files['item']['tmp_name']), $file))
+			if (!move_uploaded_file(stripslashes($request->dataWeb->files['item']['tmp_name']), FTFileSystem::pathCombine($galleryPathReal, $fileName)))
 				return 'error';
 			
-			// So, we have original & now, make a preview
-			// @todo - resize.
-
-			return $ctrl->config['web_path'] . '/' . $oAlias . '/' . basename($file);
+			// So, we have original & now, make screen & preview images
+			FTImageUtils::cropImage($config['preview_width'], $config['preview_height'], $filePath, FTFileSystem::pathCombine($galleryPathPreview, $fileName));
+			FTImageUtils::resizeImage($config['screen_width'], $config['screen_height'], $filePath, FTFileSystem::pathCombine($galleryPathScreen, $fileName));
+			
+			//return $ctrl->config['web_path'] . '/' . $oAlias . '/'. $config['preview_dir_name'] . '/' . basename($filePath);
+			return basename($filePath);
 		}
 		catch (Exception $ex)
 		{

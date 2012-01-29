@@ -78,7 +78,7 @@ class ContainerModel extends BaseModel
 					$req->params[Params::OPERATION_NAME] = Params::OPERATION_GET_BY_ALIAS;
 					$req->params[Params::ALIAS] = $v['alias'];
 
-					if ($v['app'] != 'container')
+					if ($v['app'] != 'container' && $v['app'] != 'gallery')
 					{
 						// Add lang restriction
 						$req->params[ParamsSql::RESTRICTION] = 'lang=:lang';

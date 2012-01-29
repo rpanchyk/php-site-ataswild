@@ -30,6 +30,7 @@ FTCore::loadInterface(INTERFACE_PATH, 'IXmlable');
 FTCore::loadClass(SLIB_PATH, 'FTStringUtils');
 FTCore::loadClass(SLIB_PATH, 'FTArrayUtils');
 FTCore::loadClass(SLIB_PATH, 'FTFileSystem');
+FTCore::loadClass(SLIB_PATH, 'FTImageUtils');
 FTCore::loadClass(SLIB_PATH, 'FTTimeProfiler');
 FTCore::loadClass(SLIB_PATH, 'FTException');
 

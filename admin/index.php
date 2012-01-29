@@ -138,6 +138,10 @@ function formSubmit(obj, textareaIds)
 		//eval('CKEDITOR.instances.'+textareaIds[i]+'.updateElement();');
 		dataParams[textareaIds[i]] = Url.encode(eval('CKEDITOR.instances.'+textareaIds[i]+'.getData()'));
 	}
+
+	// For gallery
+	if ( $('ul#content') != null )
+		dataParams['content'] = escape( $('ul#content').html().replace(' onclick="getGalleryItem(this)"', '') );
 	
 	$.ajax({
 		type: 'POST',
@@ -348,7 +352,7 @@ input.ft_control:focus, textarea.ft_control:focus {
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type="submit" class="ft_control" value="Войти" /></td>
+				<td style="float:left; padding:0 0 20px 20px;"><input type="submit" class="ft_control" value="Войти" /></td>
 			</tr>
 		</table>
 		<input type="hidden" name="object_app" value="user" />
