@@ -578,6 +578,7 @@ class HandlerModel extends BaseModel
 								}
 								elseif (@$v['gallery_editor'])
 								{
+									$oAlias = $request->params['object_alias'];
 									//$bIsAddTextArea = FALSE;
 									$strStyleReadOnly = 'display:none;';
 									
@@ -604,7 +605,7 @@ class HandlerModel extends BaseModel
 									$res .= '				if(response == "error"){';
 									$res .= '					status.text("Upload ERROR");';
 									$res .= '				}else{';
-									$res .= '					var newLi = "<li href=\"'.$ctrl->config['web_path'] . '/' . $request->params['object_alias'] . '/'. $ctrl->config['screen_dir_name'] . '/' .'" + response +"\"><img id=\"gallery_item_' . $k . '\" src=\"'.$ctrl->config['web_path'] . '/' . $request->params['object_alias'] . '/'. $ctrl->config['preview_dir_name'] . '/' .'" + response + "\" border=\"0\" onclick=\"getGalleryItem(this)\" style=\"width:100px; height:90px;\" /></li>";';
+									$res .= '					var newLi = "<li href=\"'.$ctrl->config['web_path'] . '/' . $oAlias . '/'. $ctrl->config['screen_dir_name'] . '/' .'" + response +"\"><img id=\"gallery_item_' . $oAlias . '\" src=\"'.$ctrl->config['web_path'] . '/' . $request->params['object_alias'] . '/'. $ctrl->config['preview_dir_name'] . '/' .'" + response + "\" border=\"0\" onclick=\"getGalleryItem(this)\" style=\"width:100px; height:90px;\" /></li>";';
 									//$res .= '					$("#' . $k . '").each(function(){ alert( $(this).html() ); });';
 									$res .= '					if ($("ul#' . $k . '").html().indexOf(response) < 0)';
 									$res .= '						$("ul#' . $k . '").append(newLi);';
@@ -617,14 +618,14 @@ class HandlerModel extends BaseModel
 									$res .= '			}';
 									$res .= '		});';
 									$res .= '		/* For old items */';
-									$res .= '		$(\'img#gallery_item_' . $k . '\').click(function(){';
+									$res .= '		$(\'img#gallery_item_' . $oAlias . '\').click(function(){';
 									//$res .= '			alert("ww"); $("#gallery_pic_id").val( $(this).attr("src") );';
 									$res .= '			getGalleryItem(this);';
 									$res .= '			return false;';
 									$res .= '		});';
 									$res .= '		$(\'#gallery_pic_delete\').click(function(){';
 									$res .= '			if( $("#gallery_pic_id").val() == ""){ alert("Выберите изображение"); return; }';
-									$res .= '			$(\'img[id="gallery_item_' . $k . '"]\').each(function(){ if( $(this).attr("src") == $("#gallery_pic_id").val() ){ $(this).parent().remove(); $("#gallery_pic_id").val(""); } });';
+									$res .= '			$(\'img[id="gallery_item_' . $oAlias . '"]\').each(function(){ if( $(this).attr("src") == $("#gallery_pic_id").val() ){ $(this).parent().remove(); $("#gallery_pic_id").val(""); } });';
 									//$res .= '			alert( $(\'#gallery_content[src="+$("#gallery_pic_id").val()+"]\').attr("id") );';
 									$res .= '			return false;';
 									$res .= '		});';
@@ -645,7 +646,7 @@ class HandlerModel extends BaseModel
 									//$res .= '		$("#gallery_pic_delete").attr("disabled", "disabled");';
 									//$res .= '	}';
 									$res .= '	function removeSelectionItem(){';
-									$res .= '		$(\'img[id="gallery_item_' . $k . '"]\').each(function(){ $(this).parent().css("border", ""); });';
+									$res .= '		$(\'img[id="gallery_item_' . $oAlias . '"]\').each(function(){ $(this).parent().css("border", ""); });';
 									$res .= '		return false;';
 									$res .= '	}';
 									$res .= '</script>';
