@@ -1427,6 +1427,9 @@ class HandlerModel extends BaseModel
 			FTImageUtils::cropImage($config['preview_width'], $config['preview_height'], $filePath, FTFileSystem::pathCombine($galleryPathPreview, $fileName));
 			FTImageUtils::resizeImage($config['screen_width'], $config['screen_height'], $filePath, FTFileSystem::pathCombine($galleryPathScreen, $fileName));
 			
+			if (!$config['is_save_real'])
+				@unlink($filePath);
+			
 			//return $ctrl->config['web_path'] . '/' . $oAlias . '/'. $config['preview_dir_name'] . '/' . basename($filePath);
 			return basename($filePath);
 		}
