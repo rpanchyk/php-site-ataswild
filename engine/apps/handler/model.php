@@ -468,6 +468,7 @@ class HandlerModel extends BaseModel
 			{
 				// Prepare data
 				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl);
+				$dataDecoded['anchor'] = empty($dataDecoded['anchor']) ? $dataDecoded['alias'] : $dataDecoded['anchor'];
 
 				// Check obligatory fields
 				$this->checkObligatoryFields($dataDecoded, $ctrl);
@@ -1346,7 +1347,8 @@ class HandlerModel extends BaseModel
 			{
 				// Prepare data
 				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl);
-
+				$dataDecoded['anchor'] = empty($dataDecoded['anchor']) ? $dataDecoded['alias'] : $dataDecoded['anchor'];
+				
 				// Check obligatory fields
 				$this->checkObligatoryFields($dataDecoded, $ctrl);
 

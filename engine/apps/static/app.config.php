@@ -9,7 +9,8 @@ $config['editor']['default']['fields'] = array(
 	'name' => array('name_ru' => 'Название', 'is_null' => '0', 'default_value' => 'Новый блок'),
 	'template' => array('name_ru' => 'Шаблон', 'is_null' => '0'),
 	'content' => array('name_ru' => 'Содержимое блока', 'rich_editor' => '1'),
-	//'is_active' => array('name_ru' => 'Активен?', 'is_bool' => '1')
+	'anchor' => array('name_ru' => 'Якорь (англ.)'),
+//'is_active' => array('name_ru' => 'Активен?', 'is_bool' => '1')
 );
 
 return $config;

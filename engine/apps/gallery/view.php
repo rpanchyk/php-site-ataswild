@@ -13,7 +13,7 @@ class GalleryView extends BaseView
 			$content = str_replace('<li', '<a', $content);
 			$content = str_replace('</li', '</a', $content);
 			$content = strip_tags($content, '<a><img>');
-			$content = preg_replace('/<a (style=".+?")/i', '<a', $content);
+			$content = preg_replace('/style="(.*?)"/i', '', $content);
 			$data['content'] = $content;
 
 			return parent::render($template, $data, $bIsUseTemplateAsMarkup);

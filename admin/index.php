@@ -140,7 +140,7 @@ function formSubmit(obj, textareaIds)
 	}
 
 	// For gallery
-	if ( $('ul#content') != null )
+	if ( $('ul[id="content"]').length != 0 )
 		dataParams['content'] = escape( $('ul#content').html().replace(' onclick="getGalleryItem(this)"', '') );
 	
 	$.ajax({
