@@ -31,6 +31,8 @@ class DatabaseDriver extends FTFireTrot
 	{
 		try
 		{
+			global $engineConfig;
+			
 			// Connection string
 			$dsn = "$dbtype:host=$host;port=$port;dbname=$dbname";
 
@@ -41,7 +43,7 @@ class DatabaseDriver extends FTFireTrot
 			$driver = strtolower(trim(substr($dsn, 0, strpos($dsn, ':'))));
 
 			// Check PDO
-			if (!$driver || !class_exists('PDO') || !extension_loaded('pdo_' . $driver))
+			if (!$driver || !$engineConfig['system']['pdo_enable'] || !class_exists('PDO') || !extension_loaded('pdo_' . $driver))
 			{
 				// Docs: http://sourceforge.net/projects/phppdo/
 				require_once EXTERNAL_PATH . '/phppdo/phppdo.php';

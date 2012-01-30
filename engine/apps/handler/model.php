@@ -355,7 +355,8 @@ class HandlerModel extends BaseModel
 			{
 				// Prepare data
 				$dataDecoded = $this->prepareHttpData($request->dataWeb->request, $ctrl);
-
+				$dataDecoded['ord'] = empty($dataDecoded['ord']) ? $ctrl->config['editor'][ParamsConfig::EDITOR_DEFAULT]['fields']['ord']['default_value'] : $dataDecoded['ord'];
+				
 				// Check obligatory fields
 				$this->checkObligatoryFields($dataDecoded, $ctrl);
 

@@ -13,9 +13,8 @@ $engineConfig['engine']['company'] = 'FireTrot';
 $engineConfig['engine']['develop_date_start'] = '2011-12-23';
 $engineConfig['engine']['develop_date_end'] = '2012-xx-xx';
 
-$engineConfig['requirements']['php_min_version'] = '5.1.0';
-$engineConfig['requirements']['pdo_enable'] = TRUE;
-
+$engineConfig['system']['php_min_version'] = '5.1.0';
+$engineConfig['system']['pdo_enable'] = TRUE;
 $engineConfig['system']['is_debug'] = TRUE;
 
 $engineConfig['database']['type'] = 'mysql';

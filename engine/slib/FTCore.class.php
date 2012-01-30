@@ -19,8 +19,8 @@ class FTCore extends FTFireTrot
 			global $engineConfig;
 
 			// Check PHP version
-			if (version_compare(PHP_VERSION, $engineConfig['requirements']['php_min_version'], '<'))
-				throw new Exception('Newer PHP version required: ' . $engineConfig['requirements']['php_min_version'] . '. Current version: ' . PHP_VERSION);
+			if (version_compare(PHP_VERSION, $engineConfig['system']['php_min_version'], '<'))
+				throw new Exception('Newer PHP version required: ' . $engineConfig['system']['php_min_version'] . '. Current version: ' . PHP_VERSION);
 
 			// Check session started
 			if (session_id() === '')

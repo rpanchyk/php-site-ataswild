@@ -104,10 +104,10 @@ function doajaxContent(params, element)
 	// Set cookie - last content query
 	if (params != null && params != 'undefined' && params != '')
 	{
-		//$.cookie("ftlcq", 
-		//	btoa(escape(params)), 
-		//	{ expires:365, path:"/", domain:"<?=$request->dataWeb->server['SERVER_NAME']?>" }
-		//);
+		$.cookie("ftlcq", 
+			btoa(escape(params)), 
+			{ expires:365, path:"/", domain:"<?=$request->dataWeb->server['SERVER_NAME']?>" }
+		);
 	}
 }
 

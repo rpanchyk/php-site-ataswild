@@ -287,12 +287,17 @@ class ContainerModel extends BaseModel
 		{
 			//echo '<pre>'; print_r($request); echo '</pre>';
 
-			$params = array();
+			/*$params = array();
 			$params[ParamsSql::TABLE] = $this->m_entityName;
 			$params[ParamsSql::RESTRICTION] = isset($request->params[ParamsSql::RESTRICTION]) ? $request->params[ParamsSql::RESTRICTION] : 'is_section=1 AND is_active=1';
 			$params[ParamsSql::RESTRICTION_DATA] = isset($request->params[ParamsSql::RESTRICTION_DATA]) ? $request->params[ParamsSql::RESTRICTION_DATA] : NULL;
+			$params[ParamsSql::ORDER_BY] = isset($request->params[ParamsSql::ORDER_BY]) ? $request->params[ParamsSql::ORDER_BY] : NULL;
 			$params[ParamsSql::LIMIT] = isset($request->params[ParamsSql::LIMIT]) ? $request->params[ParamsSql::LIMIT] : NULL;
 			$data = $request->db->get($params);
+			*/
+			$request->params[ParamsSql::RESTRICTION] = isset($request->params[ParamsSql::RESTRICTION]) ? $request->params[ParamsSql::RESTRICTION] : 'is_section=1 AND is_active=1';
+			$request->params[ParamsSql::ORDER_BY] = 'ord, alias';
+			$data = parent::opGet($request, $response);
 
 			if (!FTArrayUtils::checkData($data))
 			{
