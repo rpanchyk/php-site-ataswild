@@ -12,10 +12,10 @@ $config['real_dir_name'] = 'real';
 $config['screen_dir_name'] = 'screen';
 $config['preview_dir_name'] = 'preview';
 
-$config['preview_width'] = '150';
+$config['preview_width'] = '200';
 $config['preview_height'] = '150';
-$config['screen_width'] = '1024';
-$config['screen_height'] = '768';
+$config['screen_width'] = '900';
+$config['screen_height'] = '765';
 
 $config['is_save_real'] = TRUE;
 
