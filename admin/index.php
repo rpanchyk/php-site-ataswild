@@ -94,6 +94,7 @@ function doajaxContent(params, element)
 			showLoading('cnt');
 		},
 		success: function(data) {
+			//alert( data );
 			$('#cnt').html(data);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
@@ -132,12 +133,27 @@ function doajaxTree()
 
 function formSubmit(obj, textareaIds)
 {
-	var dataParams = unparam($.param( $('form input,textarea,select') ));
-
 	for (var i = 0; i < textareaIds.length; i++) {
 		//eval('CKEDITOR.instances.'+textareaIds[i]+'.updateElement();');
-		dataParams[textareaIds[i]] = Url.encode(eval('CKEDITOR.instances.'+textareaIds[i]+'.getData()'));
+		//dataParams[textareaIds[i]] = Url.encode(eval('CKEDITOR.instances.'+textareaIds[i]+'.getData()'));
+		//dataParams[textareaIds[i]] = decodeURIComponent( eval('CKEDITOR.instances.'+textareaIds[i]+'.getData()') );
+		//dataParams[textareaIds[i]] = Url.encode( eval('CKEDITOR.instances.'+textareaIds[i]+'.getData()') );
+		//alert( dataParams[textareaIds[i]]+'   ===   '+unescape( dataParams[textareaIds[i]] ) );
+		//dataParams[textareaIds[i]] = atob(unescape( dataParams[textareaIds[i]] ));
+		//alert( atob(eval('CKEDITOR.instances.'+textareaIds[i]+'.getData()')) );
+		//alert( dataParams[textareaIds[i]] );
+
+		//var serializer = new GSerializer();
+		//var serializedXML = serializer.serialize(dataParams, 'Array');
+		//alert( serializedXML );
+		//return;
+		
+		//alert( $('#'+textareaIds[i]).val()+' == '+eval('CKEDITOR.instances.'+textareaIds[i]+'.getData()') );
+		$('#'+textareaIds[i]).val(eval('CKEDITOR.instances.'+textareaIds[i]+'.getData()'));
+		//alert( $('#'+textareaIds[i]).val() );
 	}
+
+	var dataParams = unparam($.param( $('form input,textarea,select') ));
 
 	// For gallery
 	if ( $('ul[id="content"]').length != 0 )
@@ -147,6 +163,8 @@ function formSubmit(obj, textareaIds)
 		type: 'POST',
 		url: '<?php echo $handlerPath; ?>',
 		data: dataParams,
+		//dataType: 'json',
+        //data: $('form').serialize(),
 		success: function(data) {
 			$('#cnt').html(data);
 		},
@@ -204,7 +222,14 @@ function unparam(p)
     for (;i<len;i++) {
         if (!seg[i]) { continue; }
         s = seg[i].split('=');
+
+        // %5C'
+        // %5C%5C%5C'
+        //s[1] = s[1].replace("%5C'", "%5C%5C%5C%5C'");
+        
+        //ret[s[0]] = encodeURIComponent( s[1] );
         ret[s[0]] = s[1];
+        //alert(s[1]);
     }
     return ret;
 }
@@ -259,7 +284,9 @@ function bindEditorFull(elementid)
 	    , filebrowserFlashBrowseUrl: '/engine/editor/ckeditor_3.6.2/kcfinder/browse.php?type=flash'
 	    , filebrowserUploadUrl: '/engine/editor/ckeditor_3.6.2/kcfinder/upload.php?type=files'
 	    , filebrowserImageUploadUrl: '/engine/editor/ckeditor_3.6.2/kcfinder/upload.php?type=images'
-	    , filebrowserFlashUploadUrl: '/engine/editor/ckeditor_3.6.2/kcfinder/upload.php?type=flash'     	            
+	    , filebrowserFlashUploadUrl: '/engine/editor/ckeditor_3.6.2/kcfinder/upload.php?type=flash'
+		//, entities: false
+		//, entities_additional: '#39'     	            
     });
 }
 </script>

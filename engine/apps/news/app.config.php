@@ -26,7 +26,7 @@ $config['editor'][$config[ParamsConfig::OBJECT_ATTACH_ENTITY]]['fields'] = array
 	'title' => array('name_ru' => 'Название', 'is_null' => '0'),
 	'content' => array('name_ru' => 'Содержимое', 'rich_editor' => '1'),
 	'date_pub' => array('name_ru' => 'Дата публикации'),
-	'is_important' => array('name_ru' => 'Важная?', 'is_bool' => '1', 'default_value' => '0'),
+//	'is_important' => array('name_ru' => 'Важная?', 'is_bool' => '1', 'default_value' => '0'),
 	'is_active' => array('name_ru' => 'Активен?', 'is_bool' => '1', 'default_value' => '1'),
 );
 

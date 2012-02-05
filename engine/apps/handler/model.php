@@ -437,7 +437,8 @@ class HandlerModel extends BaseModel
 				// Put data
 				$data[0] = $dataAdd[0];
 			}
-
+//echo '<pre>'; print_r($data[0]); echo '</pre>';
+//die();
 			// Html form
 			$reqForm = new ActionRequest($request);
 			$reqForm->params[Params::DATA] = $data[0];
@@ -454,7 +455,12 @@ class HandlerModel extends BaseModel
 	{
 		try
 		{
-			FTException::throwOnTrue(@empty($request->dataWeb->request['form_submitted']), 'Only http req-s allowed');
+			//echo '<pre>'; print_r($request->dataWeb->request); echo '</pre>';
+			//$request->dataWeb->request = json_decode($request->dataWeb->request);
+			//echo '<pre>'; print_r($request->dataWeb->request); echo '</pre>';
+			//die();
+			
+			//FTException::throwOnTrue(@empty($request->dataWeb->request['form_submitted']), 'Only http req-s allowed');
 			FTException::throwOnTrue(@empty($request->params['object_alias']), 'No alias');
 
 			$ctrl = MvcFactory::create('static', ParamsMvc::ENTITY_CONTROLLER);
@@ -518,16 +524,28 @@ class HandlerModel extends BaseModel
 
 			// Get controller
 			$ctrl = $request->params[ParamsMvc::ENTITY_CONTROLLER];
-
+			
 			// Get data
 			$data = @$request->params[Params::DATA];
 			if (FTArrayUtils::checkData($data, 0))
 			{
+				$editorID = isset($request->params[ParamsConfig::EDITOR_ID]) ? $request->params[ParamsConfig::EDITOR_ID] : ParamsConfig::EDITOR_DEFAULT;
+
+				// Find rich editor field names
+				// $("#'.$k.'").val(this.value); 
+//				$aREdits = array();
+//				$jsShiftValues = '';
+//				foreach ($ctrl->config['editor'][$editorID]['fields'] as $k => $v)
+//				{
+//					if (@$v['rich_editor'])
+//					//$aREdits[] = $k;
+//					$jsShiftValues .= '$("#'.$k.'").val( eval(\'CKEDITOR.instances.'.$k.'.getData()\') );';
+//				}
+				//echo $jsShiftValues;
+				
 				// Get form html
 				$res .= '<form id="simple_form" action="' . $this->m_Controller->config['web_path'] . '" onsubmit="formSubmit(this); return false;" method="POST">';
 				$res .= '<table border="0" cellpadding="0" cellspacing="0" style="width:95%; font:14px Verdana;"><tbody>';
-
-				$editorID = isset($request->params[ParamsConfig::EDITOR_ID]) ? $request->params[ParamsConfig::EDITOR_ID] : ParamsConfig::EDITOR_DEFAULT;
 
 				$strTextareaIds = '';
 				foreach ($ctrl->config['editor'][$editorID]['fields'] as $k => $v)
@@ -573,7 +591,7 @@ class HandlerModel extends BaseModel
 								break;
 							case 'text':
 								$bIsAddTextArea = TRUE;
-								if (@$v['rich_editor'])
+								if (@$v['rich_editor'] && !@$data['is_script'])
 								{
 									$res .= '<script type="text/javascript">bindEditorFull(\'' . $k . '\');</script>';
 									$strTextareaIds .= (!empty($strTextareaIds) ? ',' : '') . '\'' . $k . '\'';

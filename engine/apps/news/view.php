@@ -8,7 +8,10 @@ class NewsView extends BaseView
 		try
 		{
 			$data4render = @$data[ParamsConfig::OBJECT_ATTACH_ENTITY];
-			FTException::throwOnTrue(empty($data4render), 'No ' . ParamsConfig::OBJECT_ATTACH_ENTITY);
+			//FTException::throwOnTrue(empty($data4render), 'No ' . ParamsConfig::OBJECT_ATTACH_ENTITY);
+
+			if (empty($data4render))
+				return '';
 
 			$strResult = '';
 			foreach ($data4render as $row)

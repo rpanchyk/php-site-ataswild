@@ -33,15 +33,15 @@ $engineConfig['mvc_data']['lang_default'] = 'ru';
 $engineConfig['mvc_data']['formatters'] = array('array', 'html', 'xml', 'rss');
 $engineConfig['mvc_data']['formatter_default'] = 'html';
 $engineConfig['mvc_data']['allowed_webaccess_apps'] = array('auth', 'comments', 'faq', 'feedback', 'news', 'profile');
-$engineConfig['mvc_data']['app_alias_default'] = 'home';
+$engineConfig['mvc_data']['app_alias_default'] = 'root';
 $engineConfig['mvc_data']['app_operation_default'] = 'get';
 
 $engineConfig['cookie']['name_lang'] = 'ftlng';
 
 $engineConfig['out_data']['root_web_path'] = '';
 $engineConfig['out_data']['upload_web_path'] = $engineConfig['out_data']['root_web_path'] . '/' . basename(VAR_PATH) . '/' . basename(UPLOAD_PATH);
-$engineConfig['out_data']['template'] = 'Default';
-$engineConfig['out_data']['web_path'] = $engineConfig['out_data']['root_web_path'] . '/public/template/' . $engineConfig['out_data']['template'];
+$engineConfig['out_data']['template'] = 'Ataswild';//'Default';
+$engineConfig['out_data']['web_path'] = $engineConfig['out_data']['root_web_path'] . '/template/' . $engineConfig['out_data']['template'];
 
 $engineConfig['smtp']['is_use_internal_server'] = FALSE;
 $engineConfig['smtp']['server_host'] = 'smtp.freenet.com.ua';

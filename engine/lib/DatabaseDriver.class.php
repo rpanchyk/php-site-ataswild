@@ -367,7 +367,8 @@ class DatabaseDriver extends FTFireTrot
 				}
 			}
 
-			return FTStringUtils::stripSlashes($this->executePDOStatement($sth, $cacheAddKey, $pdoFetchType, $cacheTtl));
+			//return FTStringUtils::stripSlashes($this->executePDOStatement($sth, $cacheAddKey, $pdoFetchType, $cacheTtl));
+			return $this->executePDOStatement($sth, $cacheAddKey, $pdoFetchType, $cacheTtl);
 		}
 		catch (Exception $ex)
 		{

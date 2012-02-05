@@ -21,8 +21,10 @@ function showLangs()
 			// Redirect
 			//$(location).attr('href', "http:\/\/" + "<?=$request->dataWeb->server['SERVER_NAME']?><?=$request->dataWeb->server['REQUEST_URI']?>");
 			var lcq = unescape(atob($.cookie("ftlcq")));
-			if (lcq != '' && lcq.indexOf('=container') == -1)
+			if (lcq != '' && lcq.indexOf('=container') == -1 && lcq.indexOf('=news') == -1)
 				doajaxContent(lcq, null);
+			if (lcq.indexOf('=news') != -1)
+				$('#cnt').html('');
 		}
 
 		// 'font-weight:bold;background-color:#eee;'

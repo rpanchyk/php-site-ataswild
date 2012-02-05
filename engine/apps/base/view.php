@@ -10,7 +10,7 @@ class BaseView extends FTFireTrot implements IView
 	{
 		try
 		{
-			global $engineConfig;
+			global $engineConfig, $request;
 
 			// Result HTML
 			$result = '';
@@ -40,6 +40,28 @@ class BaseView extends FTFireTrot implements IView
 			// Set global vars
 			if (!isset($data['theme']))
 				$data['theme'] = $engineConfig['out_data']['web_path'] . '/html';
+			if (!isset($data['lang']))
+				$data['lang'] = $request->dataMvc->getLanguage();
+
+			// Spec. project vars
+			if (!isset($data['txtImage']))
+			{
+				$txtImage = 'Picture';
+				$txtOf = 'of';
+				switch ($request->dataMvc->getLanguage())
+				{
+					case 'ru':
+						$txtImage = 'Рисунок';
+						$txtOf = 'из';
+						break;
+					case 'ua':
+						$txtImage = 'Малюнок';
+						$txtOf = 'з';
+						break;
+				}
+				$data['txtImage'] = $txtImage;
+				$data['txtOf'] = $txtOf;
+			}
 
 			// Replace placeholders
 			$result = $this->renderText($result, $data);

@@ -27,7 +27,7 @@ class WebData
 		try
 		{
 			if ($isShiftGlobals)
-				$this->shiftGlobals($aSuperGlobals, TRUE);
+				$this->shiftGlobals($aSuperGlobals, FALSE);
 
 			if ($isRemoveGlobals)
 				$this->removeGlobals($aSuperGlobals);
@@ -68,6 +68,11 @@ class WebData
 							// Safe values
 							$value = FTStringUtils::addSlashes($value);
 						}
+
+						// Remove quoting
+						if (get_magic_quotes_gpc() && !is_array($value))
+							$value = stripslashes($value);
+
 						// Set vars
 						$this->{
 							str_replace('_', '', strtolower($name))}
