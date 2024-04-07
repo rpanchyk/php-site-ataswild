@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Language" content="ru-RU" />
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+	<meta http-equiv="Content-Style-Type" content="text/css" />
+	<meta name="keywords" content="БМЗ, Генподряд, Каркасные здания, Пректирование, Монтаж, Металлокаркас, Склады, Складские здания, Быстро монтируемые здания, Атлас,  Ворд, Атлас ВОРД, Каркасные здания, Фундаментные работы, БВЗ" />
+	<meta name="description" content="БМЗ, Генподряд, Каркасные здания, Пректирование, Монтаж, Металлокаркас, Склады, Складские здания, Быстро монтируемые здания, Атлас,  Ворд, Атлас ВОРД, Каркасные здания, Фундаментные работы, БВЗ" />
+
+	<title>Атлас Ворд Билдинг Системс Украина</title>
+
+	<script type="text/javascript" src="{theme}/js/jquery.js"></script>
+	<script type="text/javascript" src="{theme}/js/jquery.lightbox-0.5.js"></script>
+	<script type="text/javascript" src="{theme}/js/jquery.nivo.slider.js"></script>
+
+	<link type="text/css" rel="stylesheet" href="{theme}/css/style.css" />
+	<link rel="stylesheet" type="text/css" href="{theme}/css/jquery.lightbox-0.5.css" media="screen" />
+	<link rel="stylesheet" href="{theme}/css/themes/default/default.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="{theme}/css/nivo-slider.css" type="text/css" media="screen" />
+
+	<script type="text/javascript">
+		$(function() {
+			$("div[id^='item']").hover(function() {
+				$("div[id^='subitem']").fadeOut(0);
+				$("div[id='sub" + this.id + "']").fadeIn(0);
+			});
+			$("div[id^='subitem']").mouseleave(function() {
+				$("div[id^='subitem']").fadeOut(0);
+				$("div[id='subitem']").fadeIn(0);
+			});
+		});
+	</script>
+	<script type="text/javascript">
+    $(function() {
+        $('#gallery a').lightBox({
+			imageLoading:	'{theme}/images/lightbox-ico-loading.gif',
+			imageBtnPrev:	'{theme}/images/lightbox-btn-prev_{lang}.png',
+			imageBtnNext:	'{theme}/images/lightbox-btn-next_{lang}.png',
+			imageBtnClose:	'{theme}/images/lightbox-btn-close_{lang}.png',
+			imageBlank:		'{theme}/images/lightbox-blank.gif',
+			txtImage:		'{txtImage}',
+			txtOf:			'{txtOf}',
+           });
+    });
+	</script>
+	
+</head>
+<body marginwidth=0 marginheight=0 leftmargin=0 topmargin=0 bgcolor="000000">
+	{content}
+</body>
+</html>

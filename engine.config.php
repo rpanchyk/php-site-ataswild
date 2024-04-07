@@ -7,7 +7,7 @@ require_once dirname(__FILE__) . '/engine/inc/cde.inc.php';
 $engineConfig = array();
 
 $engineConfig['engine']['version'] = '4.1';
-$engineConfig['engine']['developer'] = 'Ben';
+$engineConfig['engine']['developer'] = 'Rus';
 $engineConfig['engine']['designer'] = 'Geo';
 $engineConfig['engine']['company'] = 'FireTrot';
 $engineConfig['engine']['develop_date_start'] = '2011-12-23';
@@ -44,7 +44,7 @@ $engineConfig['out_data']['template'] = 'Ataswild';//'Default';
 $engineConfig['out_data']['web_path'] = $engineConfig['out_data']['root_web_path'] . '/template/' . $engineConfig['out_data']['template'];
 
 $engineConfig['smtp']['is_use_internal_server'] = FALSE;
-$engineConfig['smtp']['server_host'] = 'smtp.freenet.com.ua';
+$engineConfig['smtp']['server_host'] = 'smtp.server.host';
 $engineConfig['smtp']['server_port'] = '25';
 $engineConfig['smtp']['server_user'] = '';
 $engineConfig['smtp']['server_pass'] = '';
