@@ -11,7 +11,7 @@
 - Установить права записи на папки:
 	1 - /public/upload
 	2 - /var
-- Создать базу данных "ataswild" и выполнить SQL-скрипт в архиве "/sql/ataswild.sql.zip"
+- Создать базу данных "portfolio_ataswild" и выполнить SQL-скрипт в архиве "portfolio_ataswild.sql"
 - Установить настройки в файле "/engine/config/engine.config.php"
 - Зайти в админку сайта http://<SITE.COM>/admin/
 	E-mail - sysadmin@sysadmin.com
